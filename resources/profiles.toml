@@ -1,1 +1,1 @@
-default = ["base", "extensions"]
+default = ["base", "extensions", "gitsupport"]
