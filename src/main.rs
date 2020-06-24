@@ -1,31 +1,49 @@
+#![allow(unused)]
+
 mod colored;
 mod commands;
-mod profiles;
+mod config;
 mod resources;
 mod utils;
 
 use clap::Clap;
 use colored::*;
-use commands::{create, Opts, SubCommand};
+use commands::{Opts, SubCommand};
 use std::error::Error;
 use std::path::PathBuf;
 
 fn main() {
     let opts: Opts = Opts::parse();
 
-    match &opts.subcmd {
+    // Set verbose logging
+    unsafe {
+        USE_VERBOSE = opts.verbose();
+    }
+
+    match opts.subcmd() {
         SubCommand::Create(c) => {
-            if let Err(err) = create::execute(&c) {
+            if let Err(err) = commands::create::execute(&c) {
                 error(&format!("Failed to create project: {}", err));
+            }
+        }
+        SubCommand::Build(c) => {
+            if let Err(err) = commands::build::execute(&c) {
+                error(&format!("Failed to build project: {}", err));
             }
         }
     }
 }
-
+#[cfg(not(test))]
 pub fn executable_dir() -> Result<PathBuf, Box<dyn Error>> {
     let mut path = std::env::current_exe()?;
     path.pop();
     Ok(path)
+}
+
+// Support for tests
+#[cfg(test)]
+pub fn executable_dir() -> Result<PathBuf, Box<dyn Error>> {
+    working_dir()
 }
 
 pub fn working_dir() -> Result<PathBuf, Box<dyn Error>> {
@@ -44,9 +62,9 @@ mod tests {
             std::fs::remove_dir_all(tp).unwrap();
         }
 
-        let cfg = create::Create::new("TestProject".into());
+        let cfg = commands::create::Create::new("TestProject".into());
 
-        if let Err(err) = create::execute(&cfg) {
+        if let Err(err) = commands::create::execute(&cfg) {
             error(&format!("Failed to create project: {}", err));
             panic!("FAILED")
         }

@@ -1,5 +1,7 @@
+pub mod build;
 pub mod create;
 
+use build::Build;
 use clap::Clap;
 use create::Create;
 
@@ -8,14 +10,26 @@ pub const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 #[derive(Clap)]
 #[clap(version = PKG_VERSION, author = "István Cs. <icsanyi96@gmail.com>")]
 pub struct Opts {
-    /// A level of verbosity, and can be used multiple times
-    #[clap(short, long, parse(from_occurrences))]
-    verbose: i32,
+    /// A level of verbosity
+    #[clap(short, long)]
+    verbose: bool,
+
     #[clap(subcommand)]
-    pub subcmd: SubCommand,
+    subcmd: SubCommand,
+}
+
+impl Opts {
+    pub fn verbose(&self) -> bool {
+        self.verbose
+    }
+
+    pub fn subcmd(&self) -> &SubCommand {
+        &self.subcmd
+    }
 }
 
 #[derive(Clap)]
 pub enum SubCommand {
     Create(Create),
+    Build(Build),
 }

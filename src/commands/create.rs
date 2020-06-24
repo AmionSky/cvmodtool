@@ -1,4 +1,5 @@
 use crate::colored::*;
+use crate::config::ModConfig;
 use crate::resources::modules::{self, Module};
 use clap::Clap;
 use std::error::Error;
@@ -39,30 +40,36 @@ impl Create {
     }
 }
 
-pub fn execute(c: &Create) -> Result<(), Box<dyn Error>> {
+pub fn execute(opts: &Create) -> Result<(), Box<dyn Error>> {
     let working_dir = crate::working_dir()?;
 
-    info("Creating project directory...");
-    let project_dir = match create_project_dir(&working_dir, c.name()) {
+    info("Installing modules...");
+    let modules_to_install = match get_modules_to_install(&opts) {
+        Ok(ret) => ret,
+        Err(err) => {
+            return Err(format!("Failed to get modules to install: {}", err).into());
+        }
+    };
+
+    let project_dir = match create_project_dir(&working_dir, opts.name()) {
         Ok(ret) => ret,
         Err(err) => return Err(format!("Failed to create project directory: {}", err).into()),
     };
 
-    info("Installing modules...");
-    let modules_to_install = match get_modules_to_install(&c) {
-        Ok(ret) => ret,
-        Err(err) => return Err(format!("Failed to get modules to install: {}", err).into()),
-    };
-
-    match install_modules(&project_dir, &modules_to_install, c.name()) {
+    match install_modules(&project_dir, &modules_to_install, opts.name()) {
         Ok(ret) => ret,
         Err(err) => return Err(format!("Failed to install modules: {}", err).into()),
     }
 
     info("Creating build configuration...");
+    let modconfig = ModConfig::new(opts.name());
+    modconfig.save(project_dir.join("cvmod.toml"))?;
     //TODO Create package.toml & .bat
 
-    info("Done!");
+    info(&format!(
+        "Done! Project created at {}",
+        project_dir.display()
+    ));
     Ok(())
 }
 
@@ -101,7 +108,7 @@ fn get_specified_modules(c: &Create) -> Result<Vec<String>, Box<dyn Error>> {
         return Ok(c.modules().as_ref().unwrap().clone());
     }
 
-    let mut profiles = crate::profiles::load()?;
+    let mut profiles = crate::config::load_profiles()?;
     if profiles.contains_key(c.profile()) {
         return Ok(profiles.remove(c.profile()).unwrap());
     }

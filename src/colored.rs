@@ -1,7 +1,11 @@
 use termcolored::*;
 
+pub static mut USE_VERBOSE: bool = true;
+
 pub fn verbose(text: &str) {
-    println!("{}", text.color(Color::BrightBlack));
+    if unsafe { USE_VERBOSE } {
+        println!("{}", text.color(Color::BrightBlack));
+    }
 }
 
 pub fn info(text: &str) {
