@@ -1,0 +1,7 @@
+name = "extensions"
+dependencies = ["base"]
+modifyfiles = [
+    "PROJECTNAME.uproject", 
+    "Source/PROJECTNAME.Target.cs", 
+    "Source/PROJECTNAMEEditor.Target.cs"
+]

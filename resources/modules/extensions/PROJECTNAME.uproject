@@ -1,0 +1,15 @@
+{
+	"Modules": [
+		{
+			"Name": "Extensions",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+				"UMG",
+				"CoreUObject",
+				"AIModule"
+			]
+		}
+	]
+}
