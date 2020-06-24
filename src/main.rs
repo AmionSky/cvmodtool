@@ -1,4 +1,4 @@
-#![allow(unused)]
+#![allow(dead_code)]
 
 mod colored;
 mod commands;
@@ -23,12 +23,17 @@ fn main() {
     match opts.subcmd() {
         SubCommand::Create(c) => {
             if let Err(err) = commands::create::execute(&c) {
-                error(&format!("Failed to create project: {}", err));
+                error(&format!("Failed to create the project: {}", err));
             }
         }
         SubCommand::Build(c) => {
             if let Err(err) = commands::build::execute(&c) {
-                error(&format!("Failed to build project: {}", err));
+                error(&format!("Failed to build the project: {}", err));
+            }
+        }
+        SubCommand::Pakcage(c) => {
+            if let Err(err) = commands::package::execute(&c) {
+                error(&format!("Failed to package the project: {}", err));
             }
         }
     }

@@ -1,9 +1,8 @@
 pub mod build;
 pub mod create;
+pub mod package;
 
-use build::Build;
 use clap::Clap;
-use create::Create;
 
 pub const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -30,6 +29,7 @@ impl Opts {
 
 #[derive(Clap)]
 pub enum SubCommand {
-    Create(Create),
-    Build(Build),
+    Create(create::Create),
+    Build(build::Build),
+    Pakcage(package::Package),
 }

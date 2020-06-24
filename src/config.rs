@@ -45,14 +45,18 @@ impl Config {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ModConfig {
     pakname: String,
-    uproject: PathBuf,
+    project: String,
+    packagedir: PathBuf,
+    includes: Vec<PathBuf>,
 }
 
 impl ModConfig {
     pub fn new(name: &str) -> Self {
         Self {
             pakname: format!("{}_P", name),
-            uproject: PathBuf::from(format!("{}.uproject", name)),
+            project: name.to_string(),
+            packagedir: PathBuf::from("Package"),
+            includes: vec![],
         }
     }
 
@@ -67,7 +71,40 @@ impl ModConfig {
         Ok(())
     }
 
-    pub fn uproject(&self) -> &PathBuf {
-        &self.uproject
+    pub fn pakname(&self) -> &String {
+        &self.pakname
     }
+
+    pub fn project(&self) -> &String {
+        &self.project
+    }
+
+    pub fn uproject(&self) -> PathBuf {
+        PathBuf::from(format!("{}.uproject", &self.project))
+    }
+
+    pub fn packagedir(&self) -> &PathBuf {
+        &self.packagedir
+    }
+
+    pub fn includes(&self) -> &Vec<PathBuf> {
+        &self.includes
+    }
+}
+
+pub fn load_modconfig<P: AsRef<Path>>(path: P) -> Result<(PathBuf, ModConfig), Box<dyn Error>> {
+    let wd = crate::working_dir()?;
+    let modconfig_path = wd.join(path.as_ref());
+    if !modconfig_path.is_file() {
+        return Err(format!("Mod config file ({}) not found!", path.as_ref().display()).into());
+    }
+
+    let modconfig = ModConfig::load(&modconfig_path)?;
+    let modwd = {
+        let mut modwd = modconfig_path;
+        modwd.pop();
+        modwd
+    };
+
+    Ok((modwd, modconfig))
 }

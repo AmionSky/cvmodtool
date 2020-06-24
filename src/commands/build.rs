@@ -35,7 +35,7 @@ impl Build {
 
 pub fn execute(opts: &Build) -> Result<(), Box<dyn Error>> {
     info("Loading mod config...");
-    let (modwd, modconfig) = load_modconfig(&opts)?;
+    let (modwd, modconfig) = crate::config::load_modconfig(&opts.config())?;
 
     info("Loading tool config...");
     let config = Config::load()?;
@@ -45,23 +45,6 @@ pub fn execute(opts: &Build) -> Result<(), Box<dyn Error>> {
 
     info("Done!");
     Ok(())
-}
-
-fn load_modconfig(opts: &Build) -> Result<(PathBuf, ModConfig), Box<dyn Error>> {
-    let wd = crate::working_dir()?;
-    let modconfig_path = wd.join(opts.config());
-    if !modconfig_path.is_file() {
-        return Err(format!("Mod config file ({}) not found!", opts.config().display()).into());
-    }
-
-    let modconfig = ModConfig::load(&modconfig_path)?;
-    let modwd = {
-        let mut modwd = modconfig_path;
-        modwd.pop();
-        modwd
-    };
-
-    Ok((modwd, modconfig))
 }
 
 fn run_uat(modwd: &PathBuf, modconfig: &ModConfig, uat: &PathBuf) -> Result<(), Box<dyn Error>> {
