@@ -31,7 +31,7 @@ fn main() {
                 error(&format!("Failed to build the project: {}", err));
             }
         }
-        SubCommand::Pakcage(c) => {
+        SubCommand::Package(c) => {
             if let Err(err) = commands::package::execute(&c) {
                 error(&format!("Failed to package the project: {}", err));
             }

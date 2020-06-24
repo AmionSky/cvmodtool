@@ -31,5 +31,5 @@ impl Opts {
 pub enum SubCommand {
     Create(create::Create),
     Build(build::Build),
-    Pakcage(package::Package),
+    Package(package::Package),
 }
