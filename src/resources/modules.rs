@@ -61,7 +61,7 @@ impl Module {
         target: P,
         project_name: &str,
     ) -> Result<(), Box<dyn Error>> {
-        info(&format!("Installing module: {}", self.name()));
+        verbose(&format!("Installing module: {}", self.name()));
         let cfgfile = Some(OsStr::new(CONFIG_FILE));
 
         for entry in WalkDir::new(self.path()).follow_links(true) {

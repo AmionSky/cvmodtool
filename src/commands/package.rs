@@ -15,6 +15,7 @@ pub struct Package {
 }
 
 impl Package {
+    /// Mod configuration file relative path
     pub fn config(&self) -> &PathBuf {
         &self.config
     }
@@ -25,10 +26,10 @@ pub fn execute(opts: &Package) -> Result<(), Box<dyn Error>> {
 
     verbose("Loading mod config...");
     let (modwd, modconfig) = crate::config::load_modconfig(&opts.config())?;
-
     verbose("Loading tool config...");
     let config = Config::load()?;
 
+    verbose("Generating paths...");
     let packagedir = modwd.join(modconfig.packagedir());
     let pakdir = packagedir.join(modconfig.pakname());
     let pakfile = modconfig.pakfile(&modwd);
@@ -45,21 +46,29 @@ pub fn execute(opts: &Package) -> Result<(), Box<dyn Error>> {
     // Cleanup
     if pakdir.is_dir() {
         info("Cleaning up old files...");
-        std::fs::remove_dir_all(&pakdir)?;
+        if let Err(err) = std::fs::remove_dir_all(&pakdir) {
+            return Err(format!("Failed to clean-up old files: {}", err).into());
+        }
     }
-    std::fs::create_dir_all(&pak_content_dir)?;
+
+    if let Err(err) = std::fs::create_dir_all(&pak_content_dir) {
+        return Err(format!("Failed to create package directory: {}", err).into());
+    }
 
     info("Copying package files...");
     for entry in WalkDir::new(&cooked_content_dir) {
-        let entry = entry?;
-        let absolute = entry.path();
-        let relative = absolute.strip_prefix(&cooked_content_dir)?;
+        if let Ok(entry) = entry {
+            let absolute = entry.path();
+            let relative = absolute.strip_prefix(&cooked_content_dir)?;
 
-        if absolute.is_file() && modconfig.includes().iter().any(|i| relative.starts_with(i)) {
-            verbose(&format!("  Copying file: {}", relative.display()));
-            let target = pak_content_dir.join(relative);
-            std::fs::create_dir_all(target.parent().ok_or("Path has no parent!")?)?;
-            std::fs::copy(absolute, target)?;
+            if absolute.is_file() && modconfig.includes().iter().any(|i| relative.starts_with(i)) {
+                verbose(&format!("  Copying file: {}", relative.display()));
+                let target = pak_content_dir.join(relative);
+                std::fs::create_dir_all(target.parent().ok_or("Path has no parent!")?)?;
+                std::fs::copy(absolute, target)?;
+            }
+        } else {
+            warning("Failed to access a package file!");
         }
     }
 

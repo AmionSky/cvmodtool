@@ -10,15 +10,16 @@ use std::path::{Path, PathBuf};
 pub struct Create {
     /// Name of the project
     name: String,
-    /// Profile to use
+    /// Creation profile to use
     #[clap(short, long, default_value = "default")]
     profile: String,
-    /// Add additional modules to the project.
+    /// Additional modules to install
     #[clap(short, long)]
     modules: Option<Vec<String>>,
 }
 
 impl Create {
+    #[cfg(test)]
     pub fn new(name: String) -> Self {
         Self {
             name,
@@ -27,14 +28,17 @@ impl Create {
         }
     }
 
+    /// The name of the project
     pub fn name(&self) -> &str {
         &self.name
     }
 
+    /// The creation profile to use
     pub fn profile(&self) -> &str {
         &self.profile
     }
 
+    /// Additional modules to install
     pub fn modules(&self) -> &Option<Vec<String>> {
         &self.modules
     }
@@ -57,22 +61,29 @@ pub fn execute(opts: &Create) -> Result<(), Box<dyn Error>> {
         Err(err) => return Err(format!("Failed to create project directory: {}", err).into()),
     };
 
-    match install_modules(&project_dir, &modules_to_install, opts.name()) {
-        Ok(ret) => ret,
-        Err(err) => return Err(format!("Failed to install modules: {}", err).into()),
+    if let Err(err) = install_modules(&project_dir, &modules_to_install, opts.name()) {
+        failure_cleanup(&project_dir);
+        return Err(format!("Failed to install modules: {}", err).into());
     }
 
-    info("Creating build configuration...");
-    const CFG_FILE: &str = "cvmod.toml";
-    let modconfig = create_modconfig(opts.name(), &modules_to_install)?;
-    modconfig.save(project_dir.join(CFG_FILE))?;
-    create_bat(&project_dir, CFG_FILE)?;
+    info("Creating modconfig & build script...");
+    if let Err(err) = create_extra(&project_dir, opts.name(), &modules_to_install) {
+        failure_cleanup(&project_dir);
+        return Err(format!("Failed to create modconfig/build script: {}", err).into());
+    }
 
     info(&format!(
         "Success! Project created at {}",
         project_dir.display()
     ));
     Ok(())
+}
+
+fn failure_cleanup<P: AsRef<Path>>(pd: P) {
+    verbose("Cleaning up after failure...");
+    if let Err(err) = std::fs::remove_dir_all(pd) {
+        error(&format!("Failed to clean-up after failure: {}", err));
+    }
 }
 
 fn create_project_dir<P: AsRef<Path>>(wd: P, name: &str) -> Result<PathBuf, Box<dyn Error>> {
@@ -142,6 +153,18 @@ fn install_modules<P: AsRef<Path>>(
         installed.push(module.name().to_string());
     }
 
+    Ok(())
+}
+
+fn create_extra<P: AsRef<Path>>(
+    pd: P,
+    name: &str,
+    modules: &[Module],
+) -> Result<(), Box<dyn Error>> {
+    const CFG_FILE: &str = "cvmod.toml";
+    let modconfig = create_modconfig(name, modules)?;
+    modconfig.save(pd.as_ref().join(CFG_FILE))?;
+    create_bat(pd, CFG_FILE)?;
     Ok(())
 }
 

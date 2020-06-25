@@ -28,6 +28,7 @@ pub struct Build {
 }
 
 impl Build {
+    /// Mod configuration file relative path
     pub fn config(&self) -> &PathBuf {
         &self.config
     }
@@ -38,7 +39,6 @@ pub fn execute(opts: &Build) -> Result<(), Box<dyn Error>> {
 
     verbose("Loading mod config...");
     let (modwd, modconfig) = crate::config::load_modconfig(&opts.config())?;
-
     verbose("Loading tool config...");
     let config = Config::load()?;
 
