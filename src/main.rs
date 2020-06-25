@@ -23,25 +23,30 @@ fn main() {
     match opts.subcmd() {
         SubCommand::Create(c) => {
             if let Err(err) = commands::create::execute(&c) {
-                error(&format!("Failed to create the project: {}", err));
+                error_exit(1, "Failed to create the project", err);
             }
         }
         SubCommand::Build(c) => {
             if let Err(err) = commands::build::execute(&c) {
-                error(&format!("Failed to build the project: {}", err));
+                error_exit(2, "Failed to build the project", err);
             }
         }
         SubCommand::Package(c) => {
             if let Err(err) = commands::package::execute(&c) {
-                error(&format!("Failed to package the project: {}", err));
+                error_exit(3, "Failed to package the project", err);
             }
         }
         SubCommand::Install(c) => {
             if let Err(err) = commands::install::execute(&c) {
-                error(&format!("Failed to install the package: {}", err));
+                error_exit(4, "Failed to install the package", err);
             }
         }
     }
+}
+
+fn error_exit(code: i32, msg: &str, err: Box<dyn Error>) {
+    error(&format!("{}: {}", msg, err));
+    std::process::exit(code);
 }
 
 #[cfg(not(test))]

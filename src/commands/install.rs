@@ -19,13 +19,19 @@ impl Install {
 }
 
 pub fn execute(opts: &Install) -> Result<(), Box<dyn Error>> {
+    important("Installing mod package...");
+
     info("Loading mod config...");
     let (modwd, modconfig) = crate::config::load_modconfig(&opts.config())?;
+
+    let pakfile = modconfig.pakfile(&modwd);
+    if !pakfile.is_file() {
+        return Err("Package file was not found! Make sure to package the project first.".into());
+    }
 
     info("Loading tool config...");
     let config = Config::load()?;
 
-    let pakfile = modconfig.pakfile(&modwd);
     let pakfilename = pakfile.file_name().ok_or("Failed to get .pak file name")?;
     let target = config.moddir().join(pakfilename);
     std::fs::copy(pakfile, target)?;

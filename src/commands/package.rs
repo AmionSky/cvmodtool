@@ -21,6 +21,8 @@ impl Package {
 }
 
 pub fn execute(opts: &Package) -> Result<(), Box<dyn Error>> {
+    important("Packaging mod project...");
+
     info("Loading mod config...");
     let (modwd, modconfig) = crate::config::load_modconfig(&opts.config())?;
 
@@ -29,7 +31,7 @@ pub fn execute(opts: &Package) -> Result<(), Box<dyn Error>> {
 
     let packagedir = modwd.join(modconfig.packagedir());
     let pakdir = packagedir.join(modconfig.pakname());
-    let pakfile = packagedir.join(format!("{}.pak", modconfig.pakname()));
+    let pakfile = modconfig.pakfile(&modwd);
     let pak_content_dir = pakdir.join("CodeVein\\Content");
     let cooked_content_dir = modwd.join(format!(
         "Saved\\Cooked\\WindowsNoEditor\\{}\\Content",

@@ -34,6 +34,8 @@ impl Build {
 }
 
 pub fn execute(opts: &Build) -> Result<(), Box<dyn Error>> {
+    important("Building mod project...");
+
     info("Loading mod config...");
     let (modwd, modconfig) = crate::config::load_modconfig(&opts.config())?;
 

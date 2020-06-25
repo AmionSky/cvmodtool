@@ -41,6 +41,7 @@ impl Create {
 }
 
 pub fn execute(opts: &Create) -> Result<(), Box<dyn Error>> {
+    important("Creating mod project...");
     let working_dir = crate::working_dir()?;
 
     info("Installing modules...");
@@ -62,9 +63,10 @@ pub fn execute(opts: &Create) -> Result<(), Box<dyn Error>> {
     }
 
     info("Creating build configuration...");
+    const CFG_FILE: &str = "cvmod.toml";
     let modconfig = create_modconfig(opts.name(), &modules_to_install)?;
-    modconfig.save(project_dir.join("cvmod.toml"))?;
-    create_bat(&project_dir)?;
+    modconfig.save(project_dir.join(CFG_FILE))?;
+    create_bat(&project_dir, CFG_FILE)?;
 
     info(&format!(
         "Done! Project created at {}",
@@ -163,20 +165,15 @@ fn create_modconfig(name: &str, modules: &[Module]) -> Result<ModConfig, Box<dyn
     Ok(modconfig)
 }
 
-fn create_bat<P: AsRef<Path>>(pd: P) -> Result<(), Box<dyn Error>> {
-    let bat_contents = format!(
-        "@echo off \n\
-        set toolpath=\"{tool}\"\n\
-        set errorhandler = if %errorlevel% neq 0 pause && exit /b %errorlevel%\n\
-        %toolpath% build\n\
-        %errorhandler%\n\
-        %toolpath% package\n\
-        %errorhandler%\n\
-        %toolpath% install\n\
-        %errorhandler%",
-        tool = std::env::current_exe()?.display()
-    );
-    let bat_path = pd.as_ref().join("build-and-install.bat");
-    std::fs::write(bat_path, bat_contents)?;
+fn create_bat<P: AsRef<Path>>(pd: P, cfg: &str) -> Result<(), Box<dyn Error>> {
+    const BAT_NAME: &str = "build-and-install.bat";
+    let bat_target_path = pd.as_ref().join(BAT_NAME);
+    let bat_ref_path = crate::resources::dir()?.join(BAT_NAME);
+
+    let mut bat_contents = std::fs::read_to_string(bat_ref_path)?;
+    bat_contents = bat_contents.replace("{tool}", &std::env::current_exe()?.to_string_lossy());
+    bat_contents = bat_contents.replace("{config}", cfg);
+
+    std::fs::write(bat_target_path, bat_contents)?;
     Ok(())
 }

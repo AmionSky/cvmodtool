@@ -8,6 +8,10 @@ pub fn verbose(text: &str) {
     }
 }
 
+pub fn important(text: &str) {
+    println!("{}", text.white().bold());
+}
+
 pub fn info(text: &str) {
     println!("{}", text.white());
 }
