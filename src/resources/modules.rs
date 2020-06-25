@@ -72,7 +72,10 @@ impl Module {
             // Exclude
             if !abs_path.is_file()
                 || abs_path.file_name() == cfgfile
-                || self.excludefiles().contains(&rel_path)
+                || self
+                    .excludefiles()
+                    .iter()
+                    .any(|ex| rel_path.starts_with(ex))
             {
                 continue;
             }
