@@ -1,7 +1,7 @@
 # Code Vein Modding Tool
 Code Vein modding helper tool for managing UE4 projects.
 
-Requires [Visual C++ 2019](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads)
+Download at [Releases](https://github.com/AmionSky/cvmodtool/releases). Requires [Visual C++ 2019](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads)
 
 ![showace](https://github.com/AmionSky/cvmodtool/blob/master/readmeres/cvmodtool.jpg?raw=true)
 
