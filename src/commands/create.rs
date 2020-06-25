@@ -13,7 +13,7 @@ pub struct Create {
     /// Profile to use
     #[clap(short, long, default_value = "default")]
     profile: String,
-    /// Overwrite module includes
+    /// Add additional modules to the project.
     #[clap(short, long)]
     modules: Option<Vec<String>>,
 }
@@ -106,13 +106,13 @@ fn get_modules_to_install(c: &Create) -> Result<Vec<Module>, Box<dyn Error>> {
 }
 
 fn get_specified_modules(c: &Create) -> Result<Vec<String>, Box<dyn Error>> {
-    if c.modules().is_some() {
-        return Ok(c.modules().as_ref().unwrap().clone());
-    }
-
     let mut profiles = crate::config::load_profiles()?;
-    if profiles.contains_key(c.profile()) {
-        return Ok(profiles.remove(c.profile()).unwrap());
+    if let Some(mut selected) = profiles.remove(c.profile()) {
+        if let Some(mseleted) = c.modules() {
+            selected.append(&mut mseleted.to_owned());
+        }
+
+        return Ok(selected);
     }
 
     Err("Specified profile was not found!".into())
