@@ -1,5 +1,6 @@
 pub mod build;
 pub mod create;
+pub mod install;
 pub mod package;
 
 use clap::Clap;
@@ -7,7 +8,7 @@ use clap::Clap;
 pub const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Clap)]
-#[clap(version = PKG_VERSION, author = "István Cs. <icsanyi96@gmail.com>")]
+#[clap(version = PKG_VERSION, author = "AmionSky <icsanyi96@gmail.com>")]
 pub struct Opts {
     /// A level of verbosity
     #[clap(short, long)]
@@ -32,4 +33,5 @@ pub enum SubCommand {
     Create(create::Create),
     Build(build::Build),
     Package(package::Package),
+    Install(install::Install),
 }

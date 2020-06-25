@@ -40,18 +40,14 @@ pub fn execute(opts: &Package) -> Result<(), Box<dyn Error>> {
         return Err("No cooked content was found! Make sure to build the project first.".into());
     }
 
-    info("Copying package files...");
-    if !packagedir.is_dir() {
-        std::fs::create_dir(&packagedir)?;
-    }
-
     // Cleanup
     if pakdir.is_dir() {
+        info("Cleaning up old files...");
         std::fs::remove_dir_all(&pakdir)?;
     }
     std::fs::create_dir_all(&pak_content_dir)?;
 
-    // Copy necessary files
+    info("Copying package files...");
     for entry in WalkDir::new(&cooked_content_dir) {
         let entry = entry?;
         let absolute = entry.path();

@@ -36,8 +36,14 @@ fn main() {
                 error(&format!("Failed to package the project: {}", err));
             }
         }
+        SubCommand::Install(c) => {
+            if let Err(err) = commands::install::execute(&c) {
+                error(&format!("Failed to install the package: {}", err));
+            }
+        }
     }
 }
+
 #[cfg(not(test))]
 pub fn executable_dir() -> Result<PathBuf, Box<dyn Error>> {
     let mut path = std::env::current_exe()?;

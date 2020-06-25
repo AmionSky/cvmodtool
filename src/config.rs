@@ -90,6 +90,11 @@ impl ModConfig {
     pub fn includes(&self) -> &Vec<PathBuf> {
         &self.includes
     }
+
+    pub fn pakfile<P: AsRef<Path>>(&self, wd: P) -> PathBuf {
+        let abs_packagedir = wd.as_ref().join(self.packagedir());
+        abs_packagedir.join(format!("{}.pak", self.pakname()))
+    }
 }
 
 pub fn load_modconfig<P: AsRef<Path>>(path: P) -> Result<(PathBuf, ModConfig), Box<dyn Error>> {
