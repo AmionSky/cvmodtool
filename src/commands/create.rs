@@ -62,9 +62,9 @@ pub fn execute(opts: &Create) -> Result<(), Box<dyn Error>> {
     }
 
     info("Creating build configuration...");
-    let modconfig = ModConfig::new(opts.name());
+    let modconfig = create_modconfig(opts.name(), &modules_to_install)?;
     modconfig.save(project_dir.join("cvmod.toml"))?;
-    //TODO Create package.toml & .bat
+    create_bat(&project_dir)?;
 
     info(&format!(
         "Done! Project created at {}",
@@ -140,5 +140,43 @@ fn install_modules<P: AsRef<Path>>(
         installed.push(module.name().to_string());
     }
 
+    Ok(())
+}
+
+fn create_modconfig(name: &str, modules: &[Module]) -> Result<ModConfig, Box<dyn Error>> {
+    let mut modconfig = ModConfig::new(name);
+
+    // Get extra info from modules
+    let mut pakincludes = vec![];
+    let mut credits = vec![];
+    for module in modules {
+        pakincludes.append(&mut module.pakinclude().to_owned());
+        credits.append(&mut module.credits().to_owned())
+    }
+    pakincludes.sort_unstable();
+    pakincludes.dedup();
+    credits.sort_unstable();
+    credits.dedup();
+
+    modconfig.set_includes(pakincludes);
+    modconfig.set_credits(credits);
+    Ok(modconfig)
+}
+
+fn create_bat<P: AsRef<Path>>(pd: P) -> Result<(), Box<dyn Error>> {
+    let bat_contents = format!(
+        "@echo off
+        set toolpath=\"{tool}\"
+        set errorhandler = if %errorlevel% neq 0 pause && exit /b %errorlevel%
+        %toolpath% build
+        %errorhandler%
+        %toolpath% package
+        %errorhandler%
+        %toolpath% install
+        %errorhandler%",
+        tool = std::env::current_exe()?.display()
+    );
+    let bat_path = pd.as_ref().join("build-and-install.bat");
+    std::fs::write(bat_path, bat_contents)?;
     Ok(())
 }

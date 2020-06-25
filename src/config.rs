@@ -48,6 +48,7 @@ pub struct ModConfig {
     project: String,
     packagedir: PathBuf,
     includes: Vec<PathBuf>,
+    credits: Vec<String>,
 }
 
 impl ModConfig {
@@ -57,6 +58,7 @@ impl ModConfig {
             project: name.to_string(),
             packagedir: PathBuf::from("Package"),
             includes: vec![],
+            credits: vec![],
         }
     }
 
@@ -89,6 +91,18 @@ impl ModConfig {
 
     pub fn includes(&self) -> &Vec<PathBuf> {
         &self.includes
+    }
+
+    pub fn credits(&self) -> &Vec<String> {
+        &self.credits
+    }
+
+    pub fn set_includes(&mut self, data: Vec<PathBuf>) {
+        self.includes = data;
+    }
+
+    pub fn set_credits(&mut self, data: Vec<String>) {
+        self.credits = data;
     }
 
     pub fn pakfile<P: AsRef<Path>>(&self, wd: P) -> PathBuf {

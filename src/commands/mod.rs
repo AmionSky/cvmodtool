@@ -8,7 +8,7 @@ use clap::Clap;
 pub const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Clap)]
-#[clap(version = PKG_VERSION, author = "AmionSky <icsanyi96@gmail.com>")]
+#[clap(version = PKG_VERSION, author = "Amion <icsanyi96@gmail.com>")]
 pub struct Opts {
     /// A level of verbosity
     #[clap(short, long)]

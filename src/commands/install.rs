@@ -3,8 +3,6 @@ use crate::config::Config;
 use clap::Clap;
 use std::error::Error;
 use std::path::PathBuf;
-use std::process::{Command, Stdio};
-use walkdir::WalkDir;
 
 /// Copy the mod's pak file into the Code Vein content directory
 #[derive(Clap)]

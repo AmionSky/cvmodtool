@@ -5,3 +5,4 @@ modifyfiles = [
     "Source/PROJECTNAME.Target.cs", 
     "Source/PROJECTNAMEEditor.Target.cs"
 ]
+credits = ["SkacikPL"]

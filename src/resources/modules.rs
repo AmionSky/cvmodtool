@@ -17,6 +17,7 @@ pub struct Module {
     modifyfiles: Vec<PathBuf>,
     excludefiles: Vec<PathBuf>,
     pakinclude: Vec<PathBuf>,
+    credits: Vec<String>,
 }
 
 impl Module {
@@ -48,6 +49,11 @@ impl Module {
     /// Gets the files/directories that should be included in the final .pak file
     pub fn pakinclude(&self) -> &Vec<PathBuf> {
         &self.pakinclude
+    }
+
+    /// Gets the credits of the module
+    pub fn credits(&self) -> &Vec<String> {
+        &self.credits
     }
 
     pub fn install<P: AsRef<Path>>(
@@ -188,6 +194,7 @@ struct ModuleConfig {
     modifyfiles: Option<Vec<PathBuf>>,
     excludefiles: Option<Vec<PathBuf>>,
     pakinclude: Option<Vec<PathBuf>>,
+    credits: Option<Vec<String>>,
 }
 
 fn load_module(path: PathBuf) -> Result<Module, Box<dyn Error>> {
@@ -201,5 +208,6 @@ fn load_module(path: PathBuf) -> Result<Module, Box<dyn Error>> {
         modifyfiles: config.modifyfiles.unwrap_or_default(),
         excludefiles: config.excludefiles.unwrap_or_default(),
         pakinclude: config.pakinclude.unwrap_or_default(),
+        credits: config.credits.unwrap_or_default(),
     })
 }
