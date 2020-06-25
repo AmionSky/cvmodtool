@@ -36,16 +36,16 @@ impl Build {
 pub fn execute(opts: &Build) -> Result<(), Box<dyn Error>> {
     important("Building mod project...");
 
-    info("Loading mod config...");
+    verbose("Loading mod config...");
     let (modwd, modconfig) = crate::config::load_modconfig(&opts.config())?;
 
-    info("Loading tool config...");
+    verbose("Loading tool config...");
     let config = Config::load()?;
 
     info("Running Unreal Automation Tool (UAT)...");
     run_uat(&modwd, &modconfig, &config.uat())?;
 
-    info("Done!");
+    info("Success!");
     Ok(())
 }
 

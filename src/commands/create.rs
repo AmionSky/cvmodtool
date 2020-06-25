@@ -69,7 +69,7 @@ pub fn execute(opts: &Create) -> Result<(), Box<dyn Error>> {
     create_bat(&project_dir, CFG_FILE)?;
 
     info(&format!(
-        "Done! Project created at {}",
+        "Success! Project created at {}",
         project_dir.display()
     ));
     Ok(())

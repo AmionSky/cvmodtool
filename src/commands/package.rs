@@ -23,10 +23,10 @@ impl Package {
 pub fn execute(opts: &Package) -> Result<(), Box<dyn Error>> {
     important("Packaging mod project...");
 
-    info("Loading mod config...");
+    verbose("Loading mod config...");
     let (modwd, modconfig) = crate::config::load_modconfig(&opts.config())?;
 
-    info("Loading tool config...");
+    verbose("Loading tool config...");
     let config = Config::load()?;
 
     let packagedir = modwd.join(modconfig.packagedir());
@@ -56,16 +56,20 @@ pub fn execute(opts: &Package) -> Result<(), Box<dyn Error>> {
         let relative = absolute.strip_prefix(&cooked_content_dir)?;
 
         if absolute.is_file() && modconfig.includes().iter().any(|i| relative.starts_with(i)) {
+            verbose(&format!("  Copying file: {}", relative.display()));
             let target = pak_content_dir.join(relative);
             std::fs::create_dir_all(target.parent().ok_or("Path has no parent!")?)?;
             std::fs::copy(absolute, target)?;
         }
     }
 
-    info("Packaging...");
+    info("Running UnrealPak...");
     run_upak(&config.upak(), &pakdir, &pakfile)?;
 
-    info("Done!");
+    info(&format!(
+        "Success! Pak file created at {}",
+        pakfile.display()
+    ));
     Ok(())
 }
 

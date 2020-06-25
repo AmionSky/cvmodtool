@@ -1,25 +1,23 @@
-use termcolored::*;
-
 pub static mut USE_VERBOSE: bool = true;
 
 pub fn verbose(text: &str) {
     if unsafe { USE_VERBOSE } {
-        println!("{}", text.color(Color::BrightBlack));
+        colour::grey_ln!("{}", text);
     }
 }
 
 pub fn important(text: &str) {
-    println!("{}", text.white().bold());
+    colour::cyan_ln!("{}", text);
 }
 
 pub fn info(text: &str) {
-    println!("{}", text.white());
+    colour::white_ln!("{}", text);
 }
 
 pub fn warning(text: &str) {
-    println!("{}", text.yellow());
+    colour::yellow_ln!("{}", text);
 }
 
 pub fn error(text: &str) {
-    eprintln!("{}", text.red());
+    colour::e_red_ln!("{}", text);
 }
