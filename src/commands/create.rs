@@ -165,14 +165,14 @@ fn create_modconfig(name: &str, modules: &[Module]) -> Result<ModConfig, Box<dyn
 
 fn create_bat<P: AsRef<Path>>(pd: P) -> Result<(), Box<dyn Error>> {
     let bat_contents = format!(
-        "@echo off
-        set toolpath=\"{tool}\"
-        set errorhandler = if %errorlevel% neq 0 pause && exit /b %errorlevel%
-        %toolpath% build
-        %errorhandler%
-        %toolpath% package
-        %errorhandler%
-        %toolpath% install
+        "@echo off \n\
+        set toolpath=\"{tool}\"\n\
+        set errorhandler = if %errorlevel% neq 0 pause && exit /b %errorlevel%\n\
+        %toolpath% build\n\
+        %errorhandler%\n\
+        %toolpath% package\n\
+        %errorhandler%\n\
+        %toolpath% install\n\
         %errorhandler%",
         tool = std::env::current_exe()?.display()
     );
