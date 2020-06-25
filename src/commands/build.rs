@@ -19,7 +19,7 @@ const UAT_ARGS: [&str; 11] = [
     "-utf8output",
 ];
 
-/// Build/Cook a Code Vein mod project
+/// Build/Cook the mod project
 #[derive(Clap)]
 pub struct Build {
     /// Mod configuration file to use

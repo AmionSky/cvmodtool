@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use walkdir::WalkDir;
 
-/// Package a Code Vein mod project into a .pak file
+/// Package a mod project into a .pak file
 #[derive(Clap)]
 pub struct Package {
     /// Mod configuration file to use

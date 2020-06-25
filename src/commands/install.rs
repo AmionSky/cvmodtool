@@ -4,7 +4,7 @@ use clap::Clap;
 use std::error::Error;
 use std::path::PathBuf;
 
-/// Copy the mod's pak file into the Code Vein content directory
+/// Copy the mod's pak file into the game's content directory
 #[derive(Clap)]
 pub struct Install {
     /// Mod configuration file to use
