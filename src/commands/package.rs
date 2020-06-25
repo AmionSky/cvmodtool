@@ -12,12 +12,20 @@ pub struct Package {
     /// Mod configuration file to use
     #[clap(short, long, default_value = "cvmod.toml")]
     config: PathBuf,
+
+    /// Don't copy the latest cooked content
+    #[clap(long)]
+    no_copy: bool,
 }
 
 impl Package {
     /// Mod configuration file relative path
     pub fn config(&self) -> &PathBuf {
         &self.config
+    }
+
+    pub fn no_copy(&self) -> bool {
+        self.no_copy
     }
 }
 
@@ -43,32 +51,36 @@ pub fn execute(opts: &Package) -> Result<(), Box<dyn Error>> {
         return Err("No cooked content was found! Make sure to build the project first.".into());
     }
 
-    // Cleanup
-    if pakdir.is_dir() {
-        info("Cleaning up old files...");
-        if let Err(err) = std::fs::remove_dir_all(&pakdir) {
-            return Err(format!("Failed to clean-up old files: {}", err).into());
-        }
-    }
-
-    if let Err(err) = std::fs::create_dir_all(&pak_content_dir) {
-        return Err(format!("Failed to create package directory: {}", err).into());
-    }
-
-    info("Copying package files...");
-    for entry in WalkDir::new(&cooked_content_dir) {
-        if let Ok(entry) = entry {
-            let absolute = entry.path();
-            let relative = absolute.strip_prefix(&cooked_content_dir)?;
-
-            if absolute.is_file() && modconfig.includes().iter().any(|i| relative.starts_with(i)) {
-                verbose(&format!("  Copying file: {}", relative.display()));
-                let target = pak_content_dir.join(relative);
-                std::fs::create_dir_all(target.parent().ok_or("Path has no parent!")?)?;
-                std::fs::copy(absolute, target)?;
+    if !opts.no_copy() {
+        // Cleanup
+        if pakdir.is_dir() {
+            info("Cleaning up old files...");
+            if let Err(err) = std::fs::remove_dir_all(&pakdir) {
+                return Err(format!("Failed to clean-up old files: {}", err).into());
             }
-        } else {
-            warning("Failed to access a package file!");
+        }
+
+        if let Err(err) = std::fs::create_dir_all(&pak_content_dir) {
+            return Err(format!("Failed to create package directory: {}", err).into());
+        }
+
+        info("Copying package files...");
+        for entry in WalkDir::new(&cooked_content_dir) {
+            if let Ok(entry) = entry {
+                let absolute = entry.path();
+                let relative = absolute.strip_prefix(&cooked_content_dir)?;
+
+                if absolute.is_file()
+                    && modconfig.includes().iter().any(|i| relative.starts_with(i))
+                {
+                    verbose(&format!("  Copying file: {}", relative.display()));
+                    let target = pak_content_dir.join(relative);
+                    std::fs::create_dir_all(target.parent().ok_or("Path has no parent!")?)?;
+                    std::fs::copy(absolute, target)?;
+                }
+            } else {
+                warning("Failed to access a package file!");
+            }
         }
     }
 
