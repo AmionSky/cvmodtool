@@ -47,12 +47,13 @@ pub fn execute(opts: &Package) -> Result<(), Box<dyn Error>> {
         modconfig.project()
     ));
 
-    if !cooked_content_dir.is_dir() {
-        return Err("No cooked content was found! Make sure to build the project first.".into());
-    }
-
     if !opts.no_copy() {
-        // Cleanup
+        if !cooked_content_dir.is_dir() {
+            return Err(
+                "No cooked content was found! Make sure to build the project first.".into(),
+            );
+        }
+
         if pakdir.is_dir() {
             info("Cleaning up old files...");
             if let Err(err) = std::fs::remove_dir_all(&pakdir) {
