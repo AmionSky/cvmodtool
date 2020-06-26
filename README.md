@@ -5,7 +5,7 @@ Download at [Releases](https://github.com/AmionSky/cvmodtool/releases). Requires
 
 ![showace](https://github.com/AmionSky/cvmodtool/blob/master/readmeres/cvmodtool.jpg?raw=true)
 
-## Functions
+## Overview
 - Create new UE4 projects with correct configuration, helper assets and build scripts.
 - Build/Cook unreal project content.
 - Package the necessary files only into a .pak file.
