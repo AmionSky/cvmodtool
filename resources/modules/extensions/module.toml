@@ -1,8 +1,8 @@
-name = "extensions"
-dependencies = ["base"]
+name = 'extensions'
+dependencies = ['base']
 modifyfiles = [
-    "PROJECTNAME.uproject", 
-    "Source/PROJECTNAME.Target.cs", 
-    "Source/PROJECTNAMEEditor.Target.cs"
+    'PROJECTNAME.uproject', 
+    'Source\PROJECTNAME.Target.cs', 
+    'Source\PROJECTNAMEEditor.Target.cs'
 ]
-credits = ["SkacikPL"]
+credits = ['SkacikPL']

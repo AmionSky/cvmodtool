@@ -1,0 +1,4 @@
+name = 'stateful'
+dependencies = ['interactive']
+pakinclude = ['ModResources\Stateful']
+credits = ['Amion']

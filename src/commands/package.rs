@@ -16,6 +16,10 @@ pub struct Package {
     /// Don't copy the latest cooked content
     #[clap(long)]
     no_copy: bool,
+
+    /// Don't compress the .pak file
+    #[clap(long)]
+    no_compress: bool,
 }
 
 impl Package {
@@ -26,6 +30,10 @@ impl Package {
 
     pub fn no_copy(&self) -> bool {
         self.no_copy
+    }
+
+    pub fn no_compress(&self) -> bool {
+        self.no_compress
     }
 }
 
@@ -71,8 +79,19 @@ pub fn execute(opts: &Package) -> Result<(), Box<dyn Error>> {
                 let absolute = entry.path();
                 let relative = absolute.strip_prefix(&cooked_content_dir)?;
 
+                // Workaround for path starts_with issues
+                let str_relative = relative
+                    .to_str()
+                    .ok_or("Failed to convert path to str!")?
+                    .replace('/', "\\");
+
+                #[allow(clippy::block_in_if_condition_stmt)]
                 if absolute.is_file()
-                    && modconfig.includes().iter().any(|i| relative.starts_with(i))
+                    && modconfig.includes().iter().any(|i| {
+                        // Workaround for path starts_with issues
+                        let str_i = i.to_str().unwrap().replace('/', "\\");
+                        str_relative.starts_with(&str_i)
+                    })
                 {
                     verbose(&format!("  Copying file: {}", relative.display()));
                     let target = pak_content_dir.join(relative);
@@ -86,7 +105,13 @@ pub fn execute(opts: &Package) -> Result<(), Box<dyn Error>> {
     }
 
     info("Running UnrealPak...");
-    run_upak(&config.upak(), &pakdir, &pakfile)?;
+    run_upak(
+        &config.upak(),
+        &packagedir,
+        &pakdir,
+        &pakfile,
+        !opts.no_compress(),
+    )?;
 
     info(&format!(
         "Success! Pak file created at {}",
@@ -95,16 +120,37 @@ pub fn execute(opts: &Package) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn run_upak(upak: &PathBuf, pakdir: &PathBuf, pakfile: &PathBuf) -> Result<(), Box<dyn Error>> {
-    let mut child = Command::new(upak)
+fn run_upak(
+    upak: &PathBuf,
+    packagedir: &PathBuf,
+    pakdir: &PathBuf,
+    pakfile: &PathBuf,
+    compress: bool,
+) -> Result<(), Box<dyn Error>> {
+    let filelist = packagedir.join("filelist.txt");
+
+    // Create filelist.txt
+    if let Err(err) = std::fs::write(
+        &filelist,
+        format!("\"{}\\*.*\" \"..\\..\\..\\*.*\" ", pakdir.display()),
+    ) {
+        return Err(format!("Failed to create filelist.txt: {}", err).into());
+    }
+
+    // Run UnrealPak
+    let mut command = Command::new(upak);
+    command
         .stdin(Stdio::null())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .arg(pakfile)
-        .arg(format!("-Create={}", pakdir.display()))
-        .arg("-compress")
-        .spawn()
-        .expect("UnrealPak failed to start");
+        .arg(format!("-Create={}", filelist.display()));
+
+    if compress {
+        command.arg("-compress");
+    }
+
+    let mut child = command.spawn().expect("UnrealPak failed to start");
 
     let exitcode = child.wait()?;
     if !exitcode.success() {

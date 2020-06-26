@@ -1,3 +1,6 @@
-default = ["base", "extensions", "gitsupport"]
-nocompile = ["base", "gitsupport"]
+full = ['base', 'extensions', 'gitsupport', 'enemies', 'spawner', 'interactive', 'stateful', 'startmap', 'workmapdoor']
+default = ['base', 'extensions', 'enemies', 'spawner', 'interactive', 'startmap']
 empty = []
+
+map = ['base', 'extensions', 'enemies', 'spawner', 'interactive', 'stateful', 'startmap', 'workmapdoor']
+nocompile = ['base', 'enemies', 'spawner', 'startmap']

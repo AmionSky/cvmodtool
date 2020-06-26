@@ -1,0 +1,4 @@
+name = 'workmapdoor'
+dependencies = ['interactive']
+pakinclude = ['ModResources\EnterDevMap', 'Environment\Base01_Hideout\Blueprints\BP_FieldTrigger_JukeBox']
+credits = ['Amion']
