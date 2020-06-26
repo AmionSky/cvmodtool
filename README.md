@@ -7,9 +7,9 @@ Download at [Releases](https://github.com/AmionSky/cvmodtool/releases). Requires
 
 ## Functions
 - Create new UE4 projects with correct configuration, helper assets and build scripts.
-- Build/Cook unreal project content
-- Package the necessary files only into a .pak file
-- Install/Copy the .pak into your mods folder
+- Build/Cook unreal project content.
+- Package the necessary files only into a .pak file.
+- Install/Copy the .pak into your mods folder.
 
 ## Mod Config file
 By default named `cvmod.toml`. Make sure to update the `includes` if necessary.
@@ -39,6 +39,7 @@ Creates a new Unreal project in the current directory inside a folder with an id
 |-|-|-|
 |profile|`-p <ProfileName>`<br>`--profile <ProfileName>`|Specify the profile to use for selecting the modules for install. Profiles are defined at `resources/profiles.toml`.<br>[default: default]
 |modules|`-m <ModuleNames...>`<br>`--modules <ModuleNames...>`|Additional modules to install.
+
 Examples:
 ```
 cvmodtool.exe create TestProject
