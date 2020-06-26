@@ -30,6 +30,10 @@ impl ModConfig {
 
     /// Load from disk
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, Box<dyn Error>> {
+        if !path.as_ref().is_file() {
+            return Err(format!("Mod config file ({}) not found!", path.as_ref().display()).into());
+        }
+
         let content = match std::fs::read_to_string(path) {
             Ok(ret) => ret,
             Err(err) => return Err(format!("Failed to read mod config: {}", err).into()),
