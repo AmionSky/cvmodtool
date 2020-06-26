@@ -1,1 +1,3 @@
 default = ["base", "extensions", "gitsupport"]
+nocompile = ["base", "gitsupport"]
+empty = []
