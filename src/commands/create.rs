@@ -52,6 +52,14 @@ pub fn execute(opts: &Create) -> Result<(), Box<dyn Error>> {
         return Err("Project name has incorrect format".into());
     }
 
+    if check_project_dir(&working_dir, opts.name()) {
+        return Err(format!(
+            "A project with the name \"{}\" already exist in the current directory!",
+            opts.name()
+        )
+        .into());
+    }
+
     info("Installing modules...");
     let modules_to_install = match get_modules_to_install(&opts) {
         Ok(ret) => ret,
@@ -95,6 +103,11 @@ fn name_check(name: &str) -> bool {
         return false;
     }
     PathBuf::from(name).components().count() == 1
+}
+
+fn check_project_dir<P: AsRef<Path>>(wd: P, name: &str) -> bool {
+    let project_dir = wd.as_ref().join(name);
+    project_dir.exists()
 }
 
 fn create_project_dir<P: AsRef<Path>>(wd: P, name: &str) -> Result<PathBuf, Box<dyn Error>> {
