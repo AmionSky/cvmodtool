@@ -1,26 +1,76 @@
 use crate::colored::*;
 use crate::resources::REPLACE;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::error::Error;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-const REL_PATH: &str = "resources\\modules";
+const REL_PATH: &str = "modules";
 const CONFIG_FILE: &str = "module.toml";
 
-#[derive(Debug, Clone)]
+pub fn load() -> Result<Vec<Module>, Box<dyn Error>> {
+    let module_dirs = std::fs::read_dir(dir()?)?;
+    let mut modules = vec![];
+
+    for entry_result in module_dirs {
+        if let Ok(entry) = entry_result {
+            let module_config_path = {
+                let mut path = entry.path();
+                path.push(CONFIG_FILE);
+                path
+            };
+
+            if module_config_path.is_file() {
+                match Module::load(module_config_path) {
+                    Ok(module) => modules.push(module),
+                    Err(err) => warning(&format!("Failed to load module: {}", err)),
+                }
+            }
+        }
+    }
+
+    Ok(modules)
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct Module {
     name: String,
+    #[serde(skip)]
     path: PathBuf,
+    #[serde(default)]
     dependencies: Vec<String>,
+    #[serde(default)]
     modifyfiles: Vec<PathBuf>,
+    #[serde(default)]
     excludefiles: Vec<PathBuf>,
+    #[serde(default)]
     pakinclude: Vec<PathBuf>,
+    #[serde(default)]
     credits: Vec<String>,
 }
 
 impl Module {
+    /// Load from disk
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, Box<dyn Error>> {
+        let content = match std::fs::read_to_string(&path) {
+            Ok(ret) => ret,
+            Err(err) => return Err(format!("Failed to read module: {}", err).into()),
+        };
+        let mut module: Self = match toml::from_str(&content) {
+            Ok(ret) => ret,
+            Err(err) => return Err(format!("Failed to parse module: {}", err).into()),
+        };
+
+        module.path = path
+            .as_ref()
+            .parent()
+            .ok_or("Failed to get module directory!")?
+            .to_owned();
+
+        Ok(module)
+    }
+
     /// Gets the name of the module
     pub fn name(&self) -> &str {
         &self.name
@@ -169,48 +219,25 @@ fn modifyfile<P: AsRef<Path>>(file: P, replace: &str) -> Result<String, Box<dyn 
     Ok(rcontent)
 }
 
-pub fn load() -> Result<Vec<Module>, Box<dyn Error>> {
-    let executable_dir = crate::executable_dir()?;
-    let modules_path = executable_dir.join(REL_PATH);
-    let mod_dirs = std::fs::read_dir(modules_path)?;
+fn dir() -> Result<PathBuf, Box<dyn Error>> {
+    let mut path = super::dir()?;
+    path.push(REL_PATH);
+    Ok(path)
+}
 
-    let mut modules = vec![];
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    for mod_dir_entry in mod_dirs {
-        if let Ok(mod_dir_entry) = mod_dir_entry {
-            let mod_dir = mod_dir_entry.path();
-            if mod_dir.is_dir() {
-                if let Ok(module) = load_module(mod_dir) {
-                    modules.push(module);
-                }
-            }
-        }
+    #[test]
+    fn test_modules_load() {
+        let module_count = std::fs::read_dir(dir().unwrap())
+            .unwrap()
+            .filter(|e| e.as_ref().unwrap().path().is_dir())
+            .count();
+
+        let modules = load().unwrap();
+
+        assert_eq!(modules.len(), module_count);
     }
-
-    Ok(modules)
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct ModuleConfig {
-    name: String,
-    dependencies: Option<Vec<String>>,
-    modifyfiles: Option<Vec<PathBuf>>,
-    excludefiles: Option<Vec<PathBuf>>,
-    pakinclude: Option<Vec<PathBuf>>,
-    credits: Option<Vec<String>>,
-}
-
-fn load_module(path: PathBuf) -> Result<Module, Box<dyn Error>> {
-    let config_path = path.join(CONFIG_FILE);
-    let config: ModuleConfig = toml::from_str(&std::fs::read_to_string(config_path)?)?;
-
-    Ok(Module {
-        name: config.name,
-        path,
-        dependencies: config.dependencies.unwrap_or_default(),
-        modifyfiles: config.modifyfiles.unwrap_or_default(),
-        excludefiles: config.excludefiles.unwrap_or_default(),
-        pakinclude: config.pakinclude.unwrap_or_default(),
-        credits: config.credits.unwrap_or_default(),
-    })
 }
