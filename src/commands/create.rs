@@ -1,5 +1,5 @@
 use crate::colored::*;
-use crate::config::ModConfig;
+use crate::config::{Config, ModConfig};
 use crate::resources::modules::{self, Module};
 use clap::Clap;
 use std::error::Error;
@@ -117,7 +117,14 @@ fn get_modules_to_install(c: &Create) -> Result<Vec<Module>, Box<dyn Error>> {
 }
 
 fn get_specified_modules(c: &Create) -> Result<Vec<String>, Box<dyn Error>> {
-    let mut profiles = crate::config::load_profiles()?;
+    verbose("Loading profiles...");
+    let mut profiles = crate::resources::profiles::load()?;
+
+    // Load user defined profiles
+    verbose("Loading tool config...");
+    let config = Config::load()?;
+    profiles.extend(config.profiles().to_owned());
+
     if let Some(mut selected) = profiles.remove(c.profile()) {
         if let Some(mseleted) = c.modules() {
             selected.append(&mut mseleted.to_owned());

@@ -11,22 +11,32 @@ Download at [Releases](https://github.com/AmionSky/cvmodtool/releases). Requires
 - Package the necessary files only into a .pak file.
 - Install/Copy the .pak into your mods folder.
 
-## Mod Config file
-By default named `cvmod.toml`. Make sure to update the `includes` if necessary.
+## Configuration
+
+### config.toml
+The tool needs a `config.toml` next to the `cvmodtool.exe` with contents:
 ```toml
-pakname = 'TestProject_P' # Name of the .pak file to create
+engine = "Path\\To\\UE_4.18" # This folder should contain the "Engine" directory
+moddir = "Path\\To\\CodeVein\\Content\\Paks\\~mods" # This folder needs to exist
+
+# Optional
+[profiles] # User defined profiles
+my-profile = ["base"]
+```
+
+### cvmod.toml
+Mod configuration file. Automatically created by the `create` command. Make sure to update the `includes` if necessary.
+```toml
 project = 'TestProject' # Name of the Unreal project
-packagedir = 'Package' # Directory to create the package in
+pakname = 'TestProject_P' # Name of the .pak file to create
 includes = ['Maps', 'ModResources'] # Folders/files to include in the final package
+
+# Optional
+packagedir = 'Package' # Directory to create the package in (default: Package)
 credits = ['Amion'] # Credits of the included modules
 ```
 
 ## Notes
-The tool needs a `config.toml` inside the `resources` directory with contents:
-```toml
-engine = "Path\\To\\UE_4.18" # This folder should contain the "Engine" directory
-moddir = "Path\\To\\CodeVein\\Content\\Paks\\~mods" # This folder needs to exist
-```
 To make the `build` command work properly, you need to build the Visual Studio project first. Unreal automatically does that if you open the project first. *(Only if you included C++ code in your project)*
 
 ## Commands

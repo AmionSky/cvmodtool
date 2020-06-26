@@ -1,63 +1,20 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 
-const PROFILES_REL_PATH: &str = "resources\\profiles.toml";
-const CONFIG_REL_PATH: &str = "resources\\config.toml";
-
-type Profiles = HashMap<String, Vec<String>>;
-
-pub fn load_profiles() -> Result<Profiles, Box<dyn Error>> {
-    let executable_dir = crate::executable_dir()?;
-    let profiles_file = executable_dir.join(PROFILES_REL_PATH);
-    let profiles: Profiles = toml::from_str(&std::fs::read_to_string(profiles_file)?)?;
-    Ok(profiles)
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Config {
-    engine: PathBuf,
-    moddir: PathBuf,
-}
-
-impl Config {
-    pub fn load() -> Result<Self, Box<dyn Error>> {
-        let executable_dir = crate::executable_dir()?;
-        let config_file = executable_dir.join(CONFIG_REL_PATH);
-
-        let content = match std::fs::read_to_string(config_file) {
-            Ok(ret) => ret,
-            Err(err) => return Err(format!("Failed to read config: {}", err).into()),
-        };
-        let config: Self = match toml::from_str(&content) {
-            Ok(ret) => ret,
-            Err(err) => return Err(format!("Failed to parse config: {}", err).into()),
-        };
-
-        Ok(config)
-    }
-
-    pub fn uat(&self) -> PathBuf {
-        self.engine.join("Engine\\Build\\BatchFiles\\RunUAT.bat")
-    }
-
-    pub fn upak(&self) -> PathBuf {
-        self.engine.join("Engine\\Binaries\\Win64\\UnrealPak.exe")
-    }
-
-    pub fn moddir(&self) -> &PathBuf {
-        &self.moddir
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ModConfig {
-    pakname: String,
     project: String,
-    packagedir: PathBuf,
+    pakname: String,
     includes: Vec<PathBuf>,
+    #[serde(skip_serializing, default = "default_packagedir")]
+    packagedir: PathBuf,
+    #[serde(default)]
     credits: Vec<String>,
+}
+
+fn default_packagedir() -> PathBuf {
+    PathBuf::from("Package")
 }
 
 impl ModConfig {
@@ -65,7 +22,7 @@ impl ModConfig {
         Self {
             pakname: format!("{}_P", name),
             project: name.to_string(),
-            packagedir: PathBuf::from("Package"),
+            packagedir: default_packagedir(),
             includes: vec![],
             credits: vec![],
         }
