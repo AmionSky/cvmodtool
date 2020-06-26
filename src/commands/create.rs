@@ -48,6 +48,10 @@ pub fn execute(opts: &Create) -> Result<(), Box<dyn Error>> {
     important("Creating mod project...");
     let working_dir = crate::working_dir()?;
 
+    if !name_check(opts.name()) {
+        return Err("Project name has incorrect format".into());
+    }
+
     info("Installing modules...");
     let modules_to_install = match get_modules_to_install(&opts) {
         Ok(ret) => ret,
@@ -84,6 +88,13 @@ fn failure_cleanup<P: AsRef<Path>>(pd: P) {
     if let Err(err) = std::fs::remove_dir_all(pd) {
         error(&format!("Failed to clean-up after failure: {}", err));
     }
+}
+
+fn name_check(name: &str) -> bool {
+    if name.is_empty() || name.chars().any(|c| c.is_whitespace()) || name == ".." {
+        return false;
+    }
+    PathBuf::from(name).components().count() == 1
 }
 
 fn create_project_dir<P: AsRef<Path>>(wd: P, name: &str) -> Result<PathBuf, Box<dyn Error>> {
