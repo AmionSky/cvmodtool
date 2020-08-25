@@ -1,4 +1,3 @@
-Packaged
 Binaries
 DerivedDataCache
 Intermediate
@@ -15,3 +14,4 @@ Saved
 *.xcworkspace
 *.log
 *_BuiltData.uasset
+/Package
