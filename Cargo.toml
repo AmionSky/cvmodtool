@@ -15,7 +15,16 @@ serde = { version = "1.0", features = ["derive"] }
 json = { package = "serde_json", version = "1.0" }
 toml = "0.5"
 walkdir = "2.3"
-colour = "0.5.0"
+colour = "0.5"
+
+[dependencies.updater]
+git = "https://github.com/AmionSky/updater"
+rev = "30e8b6d6a8448cbeda0b3d616640692e99652b41"
+features = ["procedures"]
+optional = true
+
+[features]
+default = ["updater"]
 
 [profile.release]
 opt-level = 3
