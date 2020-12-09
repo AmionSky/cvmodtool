@@ -46,7 +46,7 @@ pub fn zip<P: AsRef<Path>>(
         }
 
         let mut zipped_item = archive.by_index(i)?;
-        let out_path = target.as_ref().join(zipped_item.sanitized_name());
+        let out_path = target.as_ref().join(zipped_item.mangled_name());
 
         if zipped_item.is_dir() {
             std::fs::create_dir_all(&out_path)?;
