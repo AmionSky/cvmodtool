@@ -13,19 +13,17 @@ pub fn load() -> Result<Vec<Module>, Box<dyn Error>> {
     let module_dirs = std::fs::read_dir(dir()?)?;
     let mut modules = vec![];
 
-    for entry_result in module_dirs {
-        if let Ok(entry) = entry_result {
-            let module_config_path = {
-                let mut path = entry.path();
-                path.push(CONFIG_FILE);
-                path
-            };
+    for entry in module_dirs.flatten() {
+        let module_config_path = {
+            let mut path = entry.path();
+            path.push(CONFIG_FILE);
+            path
+        };
 
-            if module_config_path.is_file() {
-                match Module::load(module_config_path) {
-                    Ok(module) => modules.push(module),
-                    Err(err) => warning(&format!("Failed to load module: {}", err)),
-                }
+        if module_config_path.is_file() {
+            match Module::load(module_config_path) {
+                Ok(module) => modules.push(module),
+                Err(err) => warning(&format!("Failed to load module: {}", err)),
             }
         }
     }

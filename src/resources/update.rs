@@ -1,13 +1,12 @@
-use crate::extract::ExtractResult;
-use crate::provider::{Asset, DownloadResult, Provider};
-use crate::update::{StepAction, UpdateProcedure, UpdateStep};
-use crate::{extract, Progress};
-use log::info;
-use semver::Version;
+use crate::colored::info;
 use std::error::Error;
 use std::fs::File;
 use std::path::PathBuf;
 use std::sync::Arc;
+use updater::extract::{self, ExtractResult};
+use updater::provider::{Asset, DownloadResult, Provider};
+use updater::update::{StepAction, UpdateProcedure, UpdateStep};
+use updater::{Progress, Version};
 
 pub struct UpdateData {
     pub provider: Box<dyn Provider>,
@@ -39,16 +38,20 @@ impl UpdateData {
 pub struct StepCheckVersion;
 impl UpdateStep<UpdateData> for StepCheckVersion {
     fn exec(&self, data: &mut UpdateData, _: &Arc<Progress>) -> Result<StepAction, Box<dyn Error>> {
-        info!("Checking for latest version via {}", data.provider.name());
+        info(&format!(
+            "Checking for latest version via {}",
+            data.provider.name()
+        ));
         data.provider.fetch()?;
 
-        let (latest, asset) = data.provider.latest(&data.asset_name)?;
+        let latest = data.provider.latest()?;
         if latest <= data.version {
-            info!("Resources are up-to-date");
+            info("Resources are up-to-date");
             return Ok(StepAction::Complete);
         }
 
-        info!("Updating to v{} (from v{})", latest, data.version);
+        let asset = data.provider.asset(&latest, &data.asset_name)?;
+        info(&format!("Updating to v{} (from v{})", latest, data.version));
 
         // Update data
         data.version = latest;
@@ -69,7 +72,7 @@ impl UpdateStep<UpdateData> for StepDownload {
         data: &mut UpdateData,
         progress: &Arc<Progress>,
     ) -> Result<StepAction, Box<dyn Error>> {
-        info!("Downloading resources v{}", &data.version);
+        info(&format!("Downloading resources v{}", &data.version));
 
         let dl_result = data.asset.as_ref().unwrap().download(progress.clone());
 
@@ -80,7 +83,7 @@ impl UpdateStep<UpdateData> for StepDownload {
         };
 
         data.file = Some(file);
-        info!("Download finished!");
+        info("Download finished!");
 
         Ok(StepAction::Continue)
     }
@@ -100,7 +103,7 @@ impl UpdateStep<UpdateData> for StepInstall {
         data: &mut UpdateData,
         progress: &Arc<Progress>,
     ) -> Result<StepAction, Box<dyn Error>> {
-        info!("Starting install");
+        info("Starting install");
 
         // (Re)Create install folder
         let install_path = &data.directory;
@@ -129,7 +132,7 @@ impl UpdateStep<UpdateData> for StepInstall {
 }
 
 pub fn create(data: UpdateData) -> UpdateProcedure<UpdateData> {
-    let mut procedure = UpdateProcedure::new(format!("Resource Updater"), data);
+    let mut procedure = UpdateProcedure::new("Resource Updater".to_string(), data);
     procedure.add_step(Box::new(StepCheckVersion));
     procedure.add_step(Box::new(StepDownload));
     procedure.add_step(Box::new(StepInstall));

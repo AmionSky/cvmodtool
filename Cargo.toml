@@ -9,19 +9,22 @@ repository = "https://github.com/AmionSky/cvmodtool"
 license = "GPL-3.0-only"
 publish = false
 
-[workspace]
-members = [
-    "updater",
-]
-
 [dependencies]
-clap = "3.0.0-beta.1"
+clap = "3.0.0-beta.2"
 serde = { version = "1.0", features = ["derive"] }
 json = { package = "serde_json", version = "1.0" }
 toml = "0.5"
 walkdir = "2.3"
-colour = "0.5"
-updater = { path = "updater" }
+colour = "0.6"
+
+[dependencies.updater]
+git = "https://github.com/AmionSky/updater"
+rev = "ed395f0b5412a8513823f9e5330ceb9532082e29"
+features = ["procedures", "ext-zip"]
+optional = true
+
+[features]
+default = ["updater"]
 
 [profile.release]
 opt-level = 3

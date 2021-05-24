@@ -1,8 +1,9 @@
 use crate::colored::*;
+use crate::resources::update as resupdate;
 use clap::Clap;
 use std::error::Error;
 use std::path::Path;
-use updater::procedures::{resources, selfexe};
+use updater::procedures::selfexe;
 use updater::provider::{GitHubProvider, Provider};
 use updater::Version;
 
@@ -35,9 +36,9 @@ pub fn execute(opts: &Update) -> Result<(), Box<dyn Error>> {
     if executable {
         let data = selfexe::UpdateData::new(
             provider(),
-            "cvmodtool.exe".to_string(),
-            Version::parse(PKG_VERSION)?,
             std::env::current_exe()?,
+            Version::parse(PKG_VERSION)?,
+            "cvmodtool.exe".to_string(),
         );
         let mut procedure = selfexe::create(data);
         procedure.execute()?;
@@ -50,13 +51,13 @@ pub fn execute(opts: &Update) -> Result<(), Box<dyn Error>> {
         let version_file = resources_dir.join(VERSION_FILE);
 
         let version = read_file(&version_file)?;
-        let data = resources::UpdateData::new(
+        let data = resupdate::UpdateData::new(
             provider(),
             "resources.zip".to_string(),
             version,
             resources_dir,
         );
-        let mut procedure = resources::create(data);
+        let mut procedure = resupdate::create(data);
         procedure.execute()?;
 
         std::fs::write(version_file, procedure.data().version.to_string())?;
