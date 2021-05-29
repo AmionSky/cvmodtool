@@ -15,6 +15,7 @@ pub struct UpdateData {
     pub version: Version,
     pub asset: Option<Box<dyn Asset>>,
     pub file: Option<File>,
+    pub success: bool,
 }
 
 impl UpdateData {
@@ -31,6 +32,7 @@ impl UpdateData {
             version,
             asset: None,
             file: None,
+            success: false
         }
     }
 }
@@ -123,6 +125,7 @@ impl UpdateStep<UpdateData> for StepInstall {
             return Ok(StepAction::Cancel);
         }
 
+        data.success = true;
         Ok(StepAction::Continue)
     }
 

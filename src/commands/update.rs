@@ -34,37 +34,49 @@ pub fn execute(opts: &Update) -> Result<(), Box<dyn Error>> {
     }
 
     if executable {
-        let data = selfexe::UpdateData::new(
-            provider(),
-            std::env::current_exe()?,
-            Version::parse(PKG_VERSION)?,
-            "cvmodtool.exe".to_string(),
-        );
-        let mut procedure = selfexe::create(data);
-        procedure.execute()?;
-
-        info("Successfully updated the executable!");
+        update_executable()?;
     }
 
     if resources {
-        let resources_dir = crate::resources::dir()?;
-        let version_file = resources_dir.join(VERSION_FILE);
-
-        let version = read_file(&version_file)?;
-        let data = resupdate::UpdateData::new(
-            provider(),
-            "resources.zip".to_string(),
-            version,
-            resources_dir,
-        );
-        let mut procedure = resupdate::create(data);
-        procedure.execute()?;
-
-        std::fs::write(version_file, procedure.data().version.to_string())?;
-
-        info("Successfully updated the resources!");
+        update_resources()?;
     }
 
+    Ok(())
+}
+
+fn update_executable() -> Result<(), Box<dyn Error>> {
+    let data = selfexe::UpdateData::new(
+        provider(),
+        std::env::current_exe()?,
+        Version::parse(PKG_VERSION)?,
+        "cvmodtool.exe".to_string(),
+    );
+    let mut procedure = selfexe::create(data);
+    procedure.execute()?;
+
+    info("Successfully updated the executable!");
+    Ok(())
+}
+
+fn update_resources() -> Result<(), Box<dyn Error>> {
+    let resources_dir = crate::resources::dir()?;
+    let version_file = resources_dir.join(VERSION_FILE);
+
+    let version = read_file(&version_file)?;
+    let data = resupdate::UpdateData::new(
+        provider(),
+        "resources.zip".to_string(),
+        version,
+        resources_dir,
+    );
+    let mut procedure = resupdate::create(data);
+    procedure.execute()?;
+
+    if procedure.data().success {
+        std::fs::write(version_file, procedure.data().version.to_string())?;
+        info("Successfully updated the resources!");
+    }
+    
     Ok(())
 }
 
