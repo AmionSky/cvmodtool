@@ -76,7 +76,7 @@ fn update_resources() -> Result<(), Box<dyn Error>> {
         std::fs::write(version_file, procedure.data().version.to_string())?;
         info("Successfully updated the resources!");
     }
-    
+
     Ok(())
 }
 

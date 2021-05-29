@@ -32,7 +32,7 @@ impl UpdateData {
             version,
             asset: None,
             file: None,
-            success: false
+            success: false,
         }
     }
 }
