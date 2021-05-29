@@ -19,7 +19,7 @@ colour = "0.6"
 
 [dependencies.updater]
 git = "https://github.com/AmionSky/updater"
-rev = "ed395f0b5412a8513823f9e5330ceb9532082e29"
+rev = "83e8af895960c536b9982f57eaec0576e119e764"
 features = ["procedures", "ext-zip"]
 optional = true
 
