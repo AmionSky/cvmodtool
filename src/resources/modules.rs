@@ -134,7 +134,7 @@ impl Module {
             // Install file
             let mut target_path = target.as_ref().join(&rel_path);
             if modify {
-                target_path = renamefile(target_path, &project_name)?;
+                target_path = renamefile(target_path, project_name)?;
             }
 
             if target_path.is_file() {
@@ -146,7 +146,7 @@ impl Module {
                         // UProject file merger
                         use json::Value;
 
-                        let content = modifyfile(abs_path, &project_name)?;
+                        let content = modifyfile(abs_path, project_name)?;
 
                         let mut a: Value = json::from_str(&std::fs::read_to_string(&target_path)?)?;
                         let b: Value = json::from_str(&content)?;
@@ -161,7 +161,7 @@ impl Module {
                         verbose(&format!("  Replacing file: {}", &rel_path.display()));
 
                         if modify {
-                            modifycopy(abs_path, target_path, &project_name)?;
+                            modifycopy(abs_path, target_path, project_name)?;
                         } else {
                             std::fs::copy(abs_path, target_path)?;
                         }
@@ -177,7 +177,7 @@ impl Module {
                 verbose(&format!("  Copying file: {}", &rel_path.display()));
 
                 if modify {
-                    modifycopy(abs_path, target_path, &project_name)?;
+                    modifycopy(abs_path, target_path, project_name)?;
                 } else {
                     std::fs::copy(abs_path, target_path)?;
                 }
