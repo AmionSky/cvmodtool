@@ -17,8 +17,6 @@ jobs:
         run: rustup target install x86_64-pc-windows-msvc
       - name: Build
         run: cargo build --target x86_64-pc-windows-msvc --release
-      - name: Run tests
-        run: cargo test --target x86_64-pc-windows-msvc --release
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
