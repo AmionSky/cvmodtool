@@ -1,0 +1,93 @@
+name: New Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  build:
+    name: Build Executable
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install targets
+        run: rustup target install x86_64-pc-windows-msvc
+      - name: Build
+        run: cargo build --target x86_64-pc-windows-msvc --release
+      - name: Run tests
+        run: cargo test --target x86_64-pc-windows-msvc --release
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: executable
+          path: target/x86_64-pc-windows-msvc/release/cvmodtool.exe
+
+  zip:
+    name: Zip Resources
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install Zip
+        run: sudo apt-get install zip
+      - name: Zip files
+        run: cd resources && zip -r -9 ../resources.zip ./*
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: resources
+          path: resources.zip
+
+  create:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build, zip]
+    timeout-minutes: 5
+    steps:
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Code Vein Modding Tool ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+  upload:
+    strategy:
+      matrix:
+        include:
+          - asset: executable
+            target: cvmodtool.exe
+            mime: application/vnd.microsoft.portable-executable
+          - asset: resources
+            target: resources.zip
+            mime: application/zip
+    name: Upload ${{ matrix.asset }} to Release
+    runs-on: ubuntu-latest
+    needs: [create]
+    timeout-minutes: 5
+    steps:
+      - name: Get the upload URL for a release
+        uses: bruceadams/get-release@v1.2.0
+        id: get_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download ${{ matrix.asset }}
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.asset }}
+      - name: Upload ${{ matrix.target }}
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: ./${{ matrix.target }}
+          asset_name: ${{ matrix.target }}
+          asset_content_type: ${{ matrix.mime }}
