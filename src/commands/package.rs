@@ -2,7 +2,7 @@ use crate::colored::*;
 use crate::config::Config;
 use clap::Clap;
 use std::error::Error;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use walkdir::WalkDir;
 
@@ -85,7 +85,6 @@ pub fn execute(opts: &Package) -> Result<(), Box<dyn Error>> {
                     .ok_or("Failed to convert path to str!")?
                     .replace('/', "\\");
 
-                #[allow(clippy::block_in_if_condition_stmt)]
                 if absolute.is_file()
                     && modconfig.includes().iter().any(|i| {
                         // Workaround for path starts_with issues
@@ -121,10 +120,10 @@ pub fn execute(opts: &Package) -> Result<(), Box<dyn Error>> {
 }
 
 fn run_upak(
-    upak: &PathBuf,
-    packagedir: &PathBuf,
-    pakdir: &PathBuf,
-    pakfile: &PathBuf,
+    upak: &Path,
+    packagedir: &Path,
+    pakdir: &Path,
+    pakfile: &Path,
     compress: bool,
 ) -> Result<(), Box<dyn Error>> {
     let filelist = packagedir.join("filelist.txt");

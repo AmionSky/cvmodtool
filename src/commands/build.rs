@@ -2,7 +2,7 @@ use crate::colored::*;
 use crate::config::{Config, ModConfig};
 use clap::Clap;
 use std::error::Error;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 const UAT_ARGS: [&str; 11] = [
@@ -49,7 +49,7 @@ pub fn execute(opts: &Build) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn run_uat(modwd: &PathBuf, modconfig: &ModConfig, uat: &PathBuf) -> Result<(), Box<dyn Error>> {
+fn run_uat(modwd: &Path, modconfig: &ModConfig, uat: &Path) -> Result<(), Box<dyn Error>> {
     let uproject = modwd.join(modconfig.uproject());
     let mut uat_child = Command::new(uat)
         .stdin(Stdio::null())

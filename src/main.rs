@@ -22,23 +22,28 @@ fn main() {
 
     match opts.subcmd() {
         SubCommand::Create(c) => {
-            if let Err(err) = commands::create::execute(&c) {
+            if let Err(err) = commands::create::execute(c) {
                 error_exit(1, "Failed to create the project", err);
             }
         }
         SubCommand::Build(c) => {
-            if let Err(err) = commands::build::execute(&c) {
+            if let Err(err) = commands::build::execute(c) {
                 error_exit(2, "Failed to build the project", err);
             }
         }
         SubCommand::Package(c) => {
-            if let Err(err) = commands::package::execute(&c) {
+            if let Err(err) = commands::package::execute(c) {
                 error_exit(3, "Failed to package the project", err);
             }
         }
         SubCommand::Install(c) => {
-            if let Err(err) = commands::install::execute(&c) {
+            if let Err(err) = commands::install::execute(c) {
                 error_exit(4, "Failed to install the package", err);
+            }
+        }
+        SubCommand::Update(c) => {
+            if let Err(err) = commands::update::execute(c) {
+                error_exit(5, "Failed to update", err);
             }
         }
     }

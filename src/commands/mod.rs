@@ -2,6 +2,7 @@ pub mod build;
 pub mod create;
 pub mod install;
 pub mod package;
+pub mod update;
 
 use clap::Clap;
 
@@ -34,4 +35,5 @@ pub enum SubCommand {
     Build(build::Build),
     Package(package::Package),
     Install(install::Install),
+    Update(update::Update),
 }

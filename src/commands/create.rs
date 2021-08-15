@@ -61,7 +61,7 @@ pub fn execute(opts: &Create) -> Result<(), Box<dyn Error>> {
     }
 
     info("Installing modules...");
-    let modules_to_install = match get_modules_to_install(&opts) {
+    let modules_to_install = match get_modules_to_install(opts) {
         Ok(ret) => ret,
         Err(err) => {
             return Err(format!("Failed to get modules to install: {}", err).into());
@@ -117,7 +117,7 @@ fn create_project_dir<P: AsRef<Path>>(wd: P, name: &str) -> Result<PathBuf, Box<
 }
 
 fn get_modules_to_install(c: &Create) -> Result<Vec<Module>, Box<dyn Error>> {
-    let smodules = get_specified_modules(&c)?;
+    let smodules = get_specified_modules(c)?;
     let lmodules = modules::load()?;
 
     let mut out = vec![];

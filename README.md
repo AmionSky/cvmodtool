@@ -3,12 +3,12 @@ Code Vein modding helper tool for managing UE4 projects.
 
 Download at [Releases](https://github.com/AmionSky/cvmodtool/releases). Requires [Visual C++ 2019](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads) installed.
 
-![showace](https://github.com/AmionSky/cvmodtool/blob/master/readmeres/cvmodtool.jpg?raw=true)
+![console output preview](https://github.com/AmionSky/cvmodtool/blob/master/readmeres/cvmodtool.jpg?raw=true)
 
 ## Overview
 - Create new UE4 projects with correct configuration, helper assets and build scripts.
 - Build/Cook unreal project content.
-- Package the necessary files only into a .pak file.
+- Package only the necessary files into a .pak file.
 - Install/Copy the .pak into your mods folder.
 
 ## Configuration
@@ -40,8 +40,9 @@ credits = ['Amion'] # Credits of the included modules
 Profiles used for project creation. The profiles can be found in `resources\profiles.toml`.
 |Name|Description|
 |-|-|
-|default|The default profile.|
+|default|Includes the most used modules for custom maps.|
 |full|Includes all the modules.|
+|min|Minimal profile. Only includes the `base` module.|
 |empty|Doesn't include any module. *(Not even `base`)*
 
 ## Modules

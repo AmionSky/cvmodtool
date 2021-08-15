@@ -1,5 +1,6 @@
 pub mod modules;
 pub mod profiles;
+pub mod update;
 
 pub const REPLACE: &str = "PROJECTNAME";
 

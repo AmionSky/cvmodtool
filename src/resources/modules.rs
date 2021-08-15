@@ -13,19 +13,17 @@ pub fn load() -> Result<Vec<Module>, Box<dyn Error>> {
     let module_dirs = std::fs::read_dir(dir()?)?;
     let mut modules = vec![];
 
-    for entry_result in module_dirs {
-        if let Ok(entry) = entry_result {
-            let module_config_path = {
-                let mut path = entry.path();
-                path.push(CONFIG_FILE);
-                path
-            };
+    for entry in module_dirs.flatten() {
+        let module_config_path = {
+            let mut path = entry.path();
+            path.push(CONFIG_FILE);
+            path
+        };
 
-            if module_config_path.is_file() {
-                match Module::load(module_config_path) {
-                    Ok(module) => modules.push(module),
-                    Err(err) => warning(&format!("Failed to load module: {}", err)),
-                }
+        if module_config_path.is_file() {
+            match Module::load(module_config_path) {
+                Ok(module) => modules.push(module),
+                Err(err) => warning(&format!("Failed to load module: {}", err)),
             }
         }
     }
@@ -136,7 +134,7 @@ impl Module {
             // Install file
             let mut target_path = target.as_ref().join(&rel_path);
             if modify {
-                target_path = renamefile(target_path, &project_name)?;
+                target_path = renamefile(target_path, project_name)?;
             }
 
             if target_path.is_file() {
@@ -148,7 +146,7 @@ impl Module {
                         // UProject file merger
                         use json::Value;
 
-                        let content = modifyfile(abs_path, &project_name)?;
+                        let content = modifyfile(abs_path, project_name)?;
 
                         let mut a: Value = json::from_str(&std::fs::read_to_string(&target_path)?)?;
                         let b: Value = json::from_str(&content)?;
@@ -163,7 +161,7 @@ impl Module {
                         verbose(&format!("  Replacing file: {}", &rel_path.display()));
 
                         if modify {
-                            modifycopy(abs_path, target_path, &project_name)?;
+                            modifycopy(abs_path, target_path, project_name)?;
                         } else {
                             std::fs::copy(abs_path, target_path)?;
                         }
@@ -179,7 +177,7 @@ impl Module {
                 verbose(&format!("  Copying file: {}", &rel_path.display()));
 
                 if modify {
-                    modifycopy(abs_path, target_path, &project_name)?;
+                    modifycopy(abs_path, target_path, project_name)?;
                 } else {
                     std::fs::copy(abs_path, target_path)?;
                 }
