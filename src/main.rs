@@ -41,6 +41,7 @@ fn main() {
                 error_exit(4, "Failed to install the package", err);
             }
         }
+        #[cfg(feature = "updater")]
         SubCommand::Update(c) => {
             if let Err(err) = commands::update::execute(c) {
                 error_exit(5, "Failed to update", err);

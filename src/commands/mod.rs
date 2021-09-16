@@ -2,6 +2,7 @@ pub mod build;
 pub mod create;
 pub mod install;
 pub mod package;
+#[cfg(feature = "updater")]
 pub mod update;
 
 use clap::Clap;
@@ -35,5 +36,6 @@ pub enum SubCommand {
     Build(build::Build),
     Package(package::Package),
     Install(install::Install),
+    #[cfg(feature = "updater")]
     Update(update::Update),
 }
