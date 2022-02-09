@@ -1,12 +1,11 @@
 use crate::colored::*;
 use crate::config::{Config, ModConfig};
 use crate::resources::modules::{self, Module};
-use clap::Clap;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 
 /// Create a new Unreal Engine project for modding Code Vein.
-#[derive(Clap)]
+#[derive(clap::Parser)]
 pub struct Create {
     /// Name of the project
     name: String,

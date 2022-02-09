@@ -6,7 +6,7 @@ mod config;
 mod resources;
 mod utils;
 
-use clap::Clap;
+use clap::Parser;
 use colored::*;
 use commands::{Opts, SubCommand};
 use std::error::Error;

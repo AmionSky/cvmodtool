@@ -1,11 +1,10 @@
 use crate::colored::*;
 use crate::config::Config;
-use clap::Clap;
 use std::error::Error;
 use std::path::PathBuf;
 
 /// Copy the mod's pak file into the game's content directory
-#[derive(Clap)]
+#[derive(clap::Parser)]
 pub struct Install {
     /// Pak file to install. Using this the config won't be used.
     pak: Option<PathBuf>,

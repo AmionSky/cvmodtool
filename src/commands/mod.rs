@@ -5,11 +5,9 @@ pub mod package;
 #[cfg(feature = "updater")]
 pub mod update;
 
-use clap::Clap;
-
 pub const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[derive(Clap)]
+#[derive(clap::Parser)]
 #[clap(version = PKG_VERSION, author = "Amion <icsanyi96@gmail.com>")]
 pub struct Opts {
     /// A level of verbosity
@@ -30,7 +28,7 @@ impl Opts {
     }
 }
 
-#[derive(Clap)]
+#[derive(clap::Subcommand)]
 pub enum SubCommand {
     Create(create::Create),
     Build(build::Build),

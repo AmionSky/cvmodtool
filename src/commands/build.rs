@@ -1,6 +1,5 @@
 use crate::colored::*;
 use crate::config::{Config, ModConfig};
-use clap::Clap;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -20,7 +19,7 @@ const UAT_ARGS: [&str; 11] = [
 ];
 
 /// Build/Cook the mod project
-#[derive(Clap)]
+#[derive(clap::Parser)]
 pub struct Build {
     /// Mod configuration file to use
     #[clap(short, long, default_value = "cvmod.toml")]

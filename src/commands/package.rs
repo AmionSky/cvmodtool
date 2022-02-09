@@ -1,13 +1,12 @@
 use crate::colored::*;
 use crate::config::Config;
-use clap::Clap;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use walkdir::WalkDir;
 
 /// Package a mod project into a .pak file
-#[derive(Clap)]
+#[derive(clap::Parser)]
 pub struct Package {
     /// Mod configuration file to use
     #[clap(short, long, default_value = "cvmod.toml")]
