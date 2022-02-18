@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Update Rust
+        run: rustup update --no-self-update stable
       - name: Install targets
         run: rustup target install x86_64-pc-windows-msvc
       - name: Build
@@ -46,46 +48,12 @@ jobs:
     needs: [build, zip]
     timeout-minutes: 5
     steps:
-      - name: Create Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Code Vein Modding Tool ${{ github.ref }}
-          draft: false
-          prerelease: false
-
-  upload:
-    strategy:
-      matrix:
-        include:
-          - asset: executable
-            target: cvmodtool.exe
-            mime: application/vnd.microsoft.portable-executable
-          - asset: resources
-            target: resources.zip
-            mime: application/zip
-    name: Upload ${{ matrix.asset }} to Release
-    runs-on: ubuntu-latest
-    needs: [create]
-    timeout-minutes: 5
-    steps:
-      - name: Get the upload URL for a release
-        uses: bruceadams/get-release@v1.2.0
-        id: get_release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Download ${{ matrix.asset }}
+      - name: Download Artifacts
         uses: actions/download-artifact@v2
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: ${{ matrix.asset }}
-      - name: Upload ${{ matrix.target }}
-        uses: actions/upload-release-asset@v1.0.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: ./${{ matrix.target }}
-          asset_name: ${{ matrix.target }}
-          asset_content_type: ${{ matrix.mime }}
+          name: Code Vein Modding Tool ${{ github.ref }}
+          files: |
+            executable/cvmodtool.exe
+            resources/resources.zip
