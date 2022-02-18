@@ -1,7 +1,15 @@
 # Code Vein Modding Tool
 Code Vein modding helper tool for managing UE4 projects.
 
-Download at [Releases](https://github.com/AmionSky/cvmodtool/releases). Requires [Visual C++ 2019](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads) installed.
+## Installation
+Download at [Releases](https://github.com/AmionSky/cvmodtool/releases).
+
+Only need to download the `.exe` then run this command to download the resources.
+<br>*(Or manually download the resources and unzip it next to the executable)*
+
+    cvmodtool.exe update -r
+
+After that follow the instuctions at [Configuration](#configuration).
 
 ![console output preview](https://github.com/AmionSky/cvmodtool/blob/master/readmeres/cvmodtool.jpg?raw=true)
 
@@ -109,4 +117,15 @@ If the `pakfile` is defined the mod config won't be used, instead it will just c
 |Option|Usage|Description|
 |-|-|-|
 |config|`-c <ModConfig>`<br>`--config <ModConfig>`|Specify the mod configuration file to use.<br>[default: cvmod.toml]|
+---
+
+### **Update**
+    cvmodtool.exe update [OPTIONS]
+Updates the executable and the resources. Resource update will delete the resources directory!
+
+Not specifying any options will update both the executable and the resources to the latest release on GitHub. If both options are specified it is the same as calling it without any.
+|Option|Usage|Description|
+|-|-|-|
+|executable|`-e`<br>`--executable`|Only update the executable|
+|resources|`-r`<br>`--resources`|Only update the resources|
 ---
