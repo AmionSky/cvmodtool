@@ -48,12 +48,14 @@ jobs:
     needs: [build, zip]
     timeout-minutes: 5
     steps:
-      - name: Download Artifacts
+      - name: Get version from tag
+        run: echo "TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+      - name: Download artifacts
         uses: actions/download-artifact@v2
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          name: Code Vein Modding Tool ${{ github.ref }}
+          name: Code Vein Modding Tool ${{ env.TAG }}
           files: |
             executable/cvmodtool.exe
             resources/resources.zip
