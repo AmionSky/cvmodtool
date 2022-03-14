@@ -21,26 +21,29 @@ pub struct Update {
     resources: bool,
 }
 
-pub fn execute(opts: &Update) -> Result<(), Box<dyn Error>> {
-    important("Installing mod package...");
+impl Update {
+    /// Execute command
+    pub fn execute(&self) -> Result<(), Box<dyn Error>> {
+        important("Installing mod package...");
 
-    let mut executable = opts.executable;
-    let mut resources = opts.resources;
+        let mut executable = self.executable;
+        let mut resources = self.resources;
 
-    if !executable && !resources {
-        executable = true;
-        resources = true;
+        if !executable && !resources {
+            executable = true;
+            resources = true;
+        }
+
+        if executable {
+            update_executable()?;
+        }
+
+        if resources {
+            update_resources()?;
+        }
+
+        Ok(())
     }
-
-    if executable {
-        update_executable()?;
-    }
-
-    if resources {
-        update_resources()?;
-    }
-
-    Ok(())
 }
 
 fn update_executable() -> Result<(), Box<dyn Error>> {

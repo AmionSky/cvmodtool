@@ -41,53 +41,98 @@ impl Create {
     pub fn modules(&self) -> &Option<Vec<String>> {
         &self.modules
     }
-}
 
-pub fn execute(opts: &Create) -> Result<(), Box<dyn Error>> {
-    important("Creating mod project...");
-    let working_dir = crate::working_dir()?;
+    /// Execute command
+    pub fn execute(&self) -> Result<(), Box<dyn Error>> {
+        important("Creating mod project...");
+        let working_dir = crate::working_dir()?;
 
-    if !name_check(opts.name()) {
-        return Err("Project name has incorrect format".into());
-    }
-
-    if check_project_dir(&working_dir, opts.name()) {
-        return Err(format!(
-            "A project with the name \"{}\" already exist in the current directory!",
-            opts.name()
-        )
-        .into());
-    }
-
-    info("Installing modules...");
-    let modules_to_install = match get_modules_to_install(opts) {
-        Ok(ret) => ret,
-        Err(err) => {
-            return Err(format!("Failed to get modules to install: {}", err).into());
+        if !name_check(self.name()) {
+            return Err("Project name has incorrect format".into());
         }
-    };
 
-    let project_dir = match create_project_dir(&working_dir, opts.name()) {
-        Ok(ret) => ret,
-        Err(err) => return Err(format!("Failed to create project directory: {}", err).into()),
-    };
+        if check_project_dir(&working_dir, self.name()) {
+            return Err(format!(
+                "A project with the name \"{}\" already exist in the current directory!",
+                self.name()
+            )
+            .into());
+        }
 
-    if let Err(err) = install_modules(&project_dir, &modules_to_install, opts.name()) {
-        failure_cleanup(&project_dir);
-        return Err(format!("Failed to install modules: {}", err).into());
+        info("Installing modules...");
+        let modules_to_install = match self.get_modules_to_install() {
+            Ok(ret) => ret,
+            Err(err) => {
+                return Err(format!("Failed to get modules to install: {}", err).into());
+            }
+        };
+
+        let project_dir = match create_project_dir(&working_dir, self.name()) {
+            Ok(ret) => ret,
+            Err(err) => return Err(format!("Failed to create project directory: {}", err).into()),
+        };
+
+        if let Err(err) = install_modules(&project_dir, &modules_to_install, self.name()) {
+            failure_cleanup(&project_dir);
+            return Err(format!("Failed to install modules: {}", err).into());
+        }
+
+        info("Creating modconfig & build script...");
+        if let Err(err) = create_extra(&project_dir, self.name(), &modules_to_install) {
+            failure_cleanup(&project_dir);
+            return Err(format!("Failed to create modconfig/build script: {}", err).into());
+        }
+
+        info(&format!(
+            "Success! Project created at {}",
+            project_dir.display()
+        ));
+        Ok(())
     }
 
-    info("Creating modconfig & build script...");
-    if let Err(err) = create_extra(&project_dir, opts.name(), &modules_to_install) {
-        failure_cleanup(&project_dir);
-        return Err(format!("Failed to create modconfig/build script: {}", err).into());
+    fn get_modules_to_install(&self) -> Result<Vec<Module>, Box<dyn Error>> {
+        let smodules = self.get_specified_modules()?;
+        let lmodules = modules::load()?;
+
+        let mut out = vec![];
+
+        for sm in smodules {
+            let mut found = false;
+            for lm in &lmodules {
+                if lm.name() == sm {
+                    out.push(lm.clone());
+                    found = true;
+                    break;
+                }
+            }
+
+            if !found {
+                warning(&format!("Module not found: {}", sm));
+            }
+        }
+
+        Ok(out)
     }
 
-    info(&format!(
-        "Success! Project created at {}",
-        project_dir.display()
-    ));
-    Ok(())
+    fn get_specified_modules(&self) -> Result<Vec<String>, Box<dyn Error>> {
+        verbose("Loading profiles...");
+        let mut profiles = crate::resources::profiles::load()?;
+
+        // Load user defined profiles
+        verbose("Loading tool config...");
+        let config = Config::load()?;
+        profiles.extend(config.profiles().to_owned());
+
+        if let Some(mut selected) = profiles.remove(self.profile()) {
+            if let Some(mseleted) = self.modules() {
+                selected.append(&mut mseleted.to_owned());
+            }
+
+            return Ok(selected);
+        }
+
+        Err("Specified profile was not found!".into())
+    }
 }
 
 fn failure_cleanup<P: AsRef<Path>>(pd: P) {
@@ -113,50 +158,6 @@ fn create_project_dir<P: AsRef<Path>>(wd: P, name: &str) -> Result<PathBuf, Box<
     let project_dir = wd.as_ref().join(name);
     std::fs::create_dir(&project_dir)?;
     Ok(project_dir)
-}
-
-fn get_modules_to_install(c: &Create) -> Result<Vec<Module>, Box<dyn Error>> {
-    let smodules = get_specified_modules(c)?;
-    let lmodules = modules::load()?;
-
-    let mut out = vec![];
-
-    for sm in smodules {
-        let mut found = false;
-        for lm in &lmodules {
-            if lm.name() == sm {
-                out.push(lm.clone());
-                found = true;
-                break;
-            }
-        }
-
-        if !found {
-            warning(&format!("Module not found: {}", sm));
-        }
-    }
-
-    Ok(out)
-}
-
-fn get_specified_modules(c: &Create) -> Result<Vec<String>, Box<dyn Error>> {
-    verbose("Loading profiles...");
-    let mut profiles = crate::resources::profiles::load()?;
-
-    // Load user defined profiles
-    verbose("Loading tool config...");
-    let config = Config::load()?;
-    profiles.extend(config.profiles().to_owned());
-
-    if let Some(mut selected) = profiles.remove(c.profile()) {
-        if let Some(mseleted) = c.modules() {
-            selected.append(&mut mseleted.to_owned());
-        }
-
-        return Ok(selected);
-    }
-
-    Err("Specified profile was not found!".into())
 }
 
 fn install_modules<P: AsRef<Path>>(

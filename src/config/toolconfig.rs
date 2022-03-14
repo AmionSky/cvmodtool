@@ -14,14 +14,35 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn load() -> Result<Self, Box<dyn Error>> {
-        let config_file = {
-            let mut path = crate::executable_dir()?;
-            path.push(REL_PATH);
-            path
-        };
+    pub fn new(engine: PathBuf, moddir: PathBuf) -> Self {
+        Self {
+            engine,
+            moddir,
+            profiles: Profiles::new(),
+        }
+    }
 
-        let content = match std::fs::read_to_string(config_file) {
+    /// Checks if the config file exists
+    pub fn check() -> bool {
+        if let Ok(file) = config_path() {
+            file.is_file()
+        } else {
+            false
+        }
+    }
+
+    /// Saves the config to file
+    pub fn save(&self) -> Result<(), Box<dyn Error>> {
+        let content = toml::to_string_pretty(self)?;
+        if let Err(e) = std::fs::write(config_path()?, content) {
+            return Err(format!("Failed to save config: {}", e).into());
+        }
+        Ok(())
+    }
+
+    /// Loads the config from file
+    pub fn load() -> Result<Self, Box<dyn Error>> {
+        let content = match std::fs::read_to_string(config_path()?) {
             Ok(ret) => ret,
             Err(err) => return Err(format!("Failed to read config: {}", err).into()),
         };
@@ -48,4 +69,10 @@ impl Config {
     pub fn profiles(&self) -> &Profiles {
         &self.profiles
     }
+}
+
+fn config_path() -> Result<PathBuf, Box<dyn Error>> {
+    let mut path = crate::executable_dir()?;
+    path.push(REL_PATH);
+    Ok(path)
 }

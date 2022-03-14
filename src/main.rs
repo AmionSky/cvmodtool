@@ -9,10 +9,17 @@ mod utils;
 use clap::Parser;
 use colored::*;
 use commands::{Opts, SubCommand};
+use config::Config;
 use std::error::Error;
 use std::path::PathBuf;
 
 fn main() {
+    if !Config::check() {
+        if let Err(err) = create_tool_config() {
+            error_exit(-10, "Failed to create tool config", err);
+        }
+    }
+
     let opts: Opts = Opts::parse();
 
     // Set verbose logging
@@ -21,30 +28,30 @@ fn main() {
     }
 
     match opts.subcmd() {
-        SubCommand::Create(c) => {
-            if let Err(err) = commands::create::execute(c) {
-                error_exit(1, "Failed to create the project", err);
+        SubCommand::Create(cmd) => {
+            if let Err(err) = cmd.execute() {
+                error_exit(-1, "Failed to create the project", err);
             }
         }
-        SubCommand::Build(c) => {
-            if let Err(err) = commands::build::execute(c) {
-                error_exit(2, "Failed to build the project", err);
+        SubCommand::Build(cmd) => {
+            if let Err(err) = cmd.execute() {
+                error_exit(-2, "Failed to build the project", err);
             }
         }
-        SubCommand::Package(c) => {
-            if let Err(err) = commands::package::execute(c) {
-                error_exit(3, "Failed to package the project", err);
+        SubCommand::Package(cmd) => {
+            if let Err(err) = cmd.execute() {
+                error_exit(-3, "Failed to package the project", err);
             }
         }
-        SubCommand::Install(c) => {
-            if let Err(err) = commands::install::execute(c) {
-                error_exit(4, "Failed to install the package", err);
+        SubCommand::Install(cmd) => {
+            if let Err(err) = cmd.execute() {
+                error_exit(-4, "Failed to install the package", err);
             }
         }
         #[cfg(feature = "updater")]
-        SubCommand::Update(c) => {
-            if let Err(err) = commands::update::execute(c) {
-                error_exit(5, "Failed to update", err);
+        SubCommand::Update(cmd) => {
+            if let Err(err) = cmd.execute() {
+                error_exit(-5, "Failed to update", err);
             }
         }
     }
@@ -55,40 +62,48 @@ fn error_exit(code: i32, msg: &str, err: Box<dyn Error>) {
     std::process::exit(code);
 }
 
-#[cfg(not(test))]
 pub fn executable_dir() -> Result<PathBuf, Box<dyn Error>> {
-    let mut path = std::env::current_exe()?;
-    path.pop();
-    Ok(path)
-}
+    #[cfg(test)]
+    return working_dir();
 
-// Support for tests
-#[cfg(test)]
-pub fn executable_dir() -> Result<PathBuf, Box<dyn Error>> {
-    working_dir()
+    #[cfg(not(test))]
+    {
+        let mut path = std::env::current_exe()?;
+        path.pop();
+        Ok(path)
+    }
 }
 
 pub fn working_dir() -> Result<PathBuf, Box<dyn Error>> {
-    let path = std::env::current_dir()?;
-    Ok(path)
+    Ok(std::env::current_dir()?)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+fn create_tool_config() -> Result<(), Box<dyn Error>> {
+    let mut buffer = String::new();
 
-    #[test]
-    fn test_create() {
-        let tp = PathBuf::from("TestProject");
-        if tp.exists() {
-            std::fs::remove_dir_all(tp).unwrap();
-        }
-
-        let cfg = commands::create::Create::new("TestProject".into());
-
-        if let Err(err) = commands::create::execute(&cfg) {
-            error(&format!("Failed to create project: {}", err));
-            panic!("FAILED")
-        }
+    important("Creating tool config:");
+    info("Path to UE 4.18:");
+    verbose("This folder should contain the \"Engine\" directory");
+    verbose(r"Example: C:\Engines\Unreal\UE_4.18");
+    std::io::stdin().read_line(&mut buffer)?;
+    let engine = PathBuf::from(buffer.trim_end());
+    if !engine.is_dir() {
+        return Err("Engine directory is not a valid direcoty".into());
     }
+
+    buffer.clear();
+    info("Path to Code Vein \"~mods\" folder:");
+    verbose(
+        r"Example: C:\Program Files (x86)\Steam\steamapps\common\CODE VEIN\CodeVein\Content\Paks\~mods",
+    );
+    std::io::stdin().read_line(&mut buffer)?;
+    let moddir = PathBuf::from(buffer.trim_end());
+    if !moddir.is_dir() {
+        return Err("Mods directory is not a valid direcoty".into());
+    }
+
+    let config = Config::new(engine, moddir);
+    config.save()?;
+
+    Ok(())
 }

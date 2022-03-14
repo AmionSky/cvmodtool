@@ -31,21 +31,22 @@ impl Build {
     pub fn config(&self) -> &PathBuf {
         &self.config
     }
-}
 
-pub fn execute(opts: &Build) -> Result<(), Box<dyn Error>> {
-    important("Building mod project...");
+    /// Execute command
+    pub fn execute(&self) -> Result<(), Box<dyn Error>> {
+        important("Building mod project...");
 
-    verbose("Loading mod config...");
-    let (modwd, modconfig) = crate::config::load_modconfig(&opts.config())?;
-    verbose("Loading tool config...");
-    let config = Config::load()?;
+        verbose("Loading mod config...");
+        let (modwd, modconfig) = crate::config::load_modconfig(self.config())?;
+        verbose("Loading tool config...");
+        let config = Config::load()?;
 
-    info("Running Unreal Automation Tool (UAT)...");
-    run_uat(&modwd, &modconfig, &config.uat())?;
+        info("Running Unreal Automation Tool (UAT)...");
+        run_uat(&modwd, &modconfig, &config.uat())?;
 
-    info("Success!");
-    Ok(())
+        info("Success!");
+        Ok(())
+    }
 }
 
 fn run_uat(modwd: &Path, modconfig: &ModConfig, uat: &Path) -> Result<(), Box<dyn Error>> {
