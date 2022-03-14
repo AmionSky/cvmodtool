@@ -7,8 +7,6 @@ Download at [Releases](https://github.com/AmionSky/cvmodtool/releases).
 Only need to download the `.exe` then it will download the resources on first use.
 <br>*(Or manually download the resources and unzip it next to the executable)*
 
-    cvmodtool.exe update --resources
-
 ![console output preview](https://github.com/AmionSky/cvmodtool/blob/master/readmeres/cvmodtool.jpg?raw=true)
 
 ## Overview
