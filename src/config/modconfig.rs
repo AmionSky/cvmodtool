@@ -78,6 +78,7 @@ impl ModConfig {
     }
 
     /// Credits
+    #[allow(dead_code)]
     pub fn credits(&self) -> &Vec<String> {
         &self.credits
     }

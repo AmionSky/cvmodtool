@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 mod colored;
 mod commands;
 mod config;
@@ -15,8 +13,18 @@ use std::path::PathBuf;
 
 fn main() {
     if !Config::check() {
+        important("Creating tool config:");
         if let Err(err) = create_tool_config() {
             error_exit(-10, "Failed to create tool config", err);
+        }
+    }
+
+    #[cfg(feature = "updater")]
+    if resources::dir().is_err() || !resources::dir().unwrap().is_dir() {
+        important("Downloading resources:");
+        let cmd = commands::update::Update::setup();
+        if let Err(err) = cmd.execute() {
+            error_exit(-11, "Failed to download resources", err);
         }
     }
 
@@ -80,8 +88,6 @@ pub fn working_dir() -> Result<PathBuf, Box<dyn Error>> {
 
 fn create_tool_config() -> Result<(), Box<dyn Error>> {
     let mut buffer = String::new();
-
-    important("Creating tool config:");
     info("Path to UE 4.18:");
     verbose("This folder should contain the \"Engine\" directory");
     verbose(r"Example: C:\Engines\Unreal\UE_4.18");

@@ -50,7 +50,6 @@ fn step_check_version(state: &mut State, data: &mut UpdateData) -> StepResult {
     }
 
     let asset = data.provider.asset(&latest, &data.asset_name)?;
-    info(&format!("Updating to v{} (from v{})", latest, data.version));
 
     // Update data
     data.version = latest;
@@ -65,7 +64,11 @@ fn step_download(state: &mut State, data: &mut UpdateData) -> StepResult {
         data.asset.as_ref().unwrap().size() as f64 / 1_000_000.0
     ));
 
-    info(&format!("Downloading resources v{}", &data.version));
+    info(&format!(
+        "Downloading resources v{} ({:.2} MB)",
+        &data.version,
+        data.asset.as_ref().unwrap().size() as f64 / 1_000_000.0
+    ));
 
     let dl_result = data
         .asset
@@ -80,15 +83,14 @@ fn step_download(state: &mut State, data: &mut UpdateData) -> StepResult {
     };
 
     data.file = Some(file);
-    info("Download finished!");
 
     Ok(StepAction::Continue)
 }
 
 fn step_install(state: &mut State, data: &mut UpdateData) -> StepResult {
-    state.set_label("Installing...".into());
+    state.set_label("Unpacking...".into());
 
-    info("Starting install");
+    info("Unpacking resources");
 
     // (Re)Create install folder
     let install_path = &data.directory;

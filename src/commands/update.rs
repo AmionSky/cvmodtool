@@ -22,9 +22,16 @@ pub struct Update {
 }
 
 impl Update {
+    pub fn setup() -> Self {
+        Self {
+            executable: false,
+            resources: true,
+        }
+    }
+
     /// Execute command
     pub fn execute(&self) -> Result<(), Box<dyn Error>> {
-        important("Installing mod package...");
+        important("Running updater...");
 
         let mut executable = self.executable;
         let mut resources = self.resources;

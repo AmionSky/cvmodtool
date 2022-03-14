@@ -18,15 +18,6 @@ pub struct Create {
 }
 
 impl Create {
-    #[cfg(test)]
-    pub fn new(name: String) -> Self {
-        Self {
-            name,
-            profile: "default".to_string(),
-            modules: None,
-        }
-    }
-
     /// The name of the project
     pub fn name(&self) -> &str {
         &self.name
