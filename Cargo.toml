@@ -1,6 +1,6 @@
 [package]
 name = "cvmodtool"
-version = "0.3.3"
+version = "0.4.0"
 authors = ["Csányi István <icsanyi96@gmail.com>"]
 edition = "2021"
 description = "Code Vein modding helper tool for managing UE4 projects"
@@ -28,7 +28,7 @@ default = ["updater"]
 
 [profile.release]
 opt-level = 3
+strip = true
 lto = true
 codegen-units = 1
 panic = "abort"
-strip = true
