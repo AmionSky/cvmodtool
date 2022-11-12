@@ -22,7 +22,7 @@ const UAT_ARGS: [&str; 11] = [
 #[derive(clap::Parser)]
 pub struct Build {
     /// Mod configuration file to use
-    #[arg(short, long, default_value = "cvmod.toml")]
+    #[clap(short, long, default_value = "cvmod.toml")]
     config: PathBuf,
 }
 

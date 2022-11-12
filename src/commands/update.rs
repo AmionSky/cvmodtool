@@ -13,11 +13,11 @@ const VERSION_FILE: &str = "version";
 #[derive(clap::Parser)]
 pub struct Update {
     /// Only update the executable
-    #[arg(short, long)]
+    #[clap(short, long)]
     executable: bool,
 
     /// Only update the resources
-    #[arg(short, long)]
+    #[clap(short, long)]
     resources: bool,
 }
 

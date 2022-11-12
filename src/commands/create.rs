@@ -10,10 +10,10 @@ pub struct Create {
     /// Name of the project
     name: String,
     /// Creation profile to use
-    #[arg(short, long, default_value = "default")]
+    #[clap(short, long, default_value = "default")]
     profile: String,
     /// Additional modules to install
-    #[arg(short, long, num_args(0..))]
+    #[clap(short, long, multiple_values = true)]
     modules: Option<Vec<String>>,
 }
 
