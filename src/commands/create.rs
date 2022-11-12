@@ -51,10 +51,10 @@ impl Create {
         }
 
         info("Installing modules...");
-        let modules_to_install = match self.get_modules_to_install() {
+        let selected_modules = match self.get_modules_to_install() {
             Ok(ret) => ret,
             Err(err) => {
-                return Err(format!("Failed to get modules to install: {}", err).into());
+                return Err(format!("Failed to get modules: {}", err).into());
             }
         };
 
@@ -63,13 +63,13 @@ impl Create {
             Err(err) => return Err(format!("Failed to create project directory: {}", err).into()),
         };
 
-        if let Err(err) = install_modules(&project_dir, &modules_to_install, self.name()) {
+        if let Err(err) = install_modules(&project_dir, self.name(), &selected_modules) {
             failure_cleanup(&project_dir);
             return Err(format!("Failed to install modules: {}", err).into());
         }
 
         info("Creating modconfig & build script...");
-        if let Err(err) = create_extra(&project_dir, self.name(), &modules_to_install) {
+        if let Err(err) = create_extra(&project_dir, self.name(), &selected_modules) {
             failure_cleanup(&project_dir);
             return Err(format!("Failed to create modconfig/build script: {}", err).into());
         }
@@ -85,20 +85,12 @@ impl Create {
         let smodules = self.get_specified_modules()?;
         let lmodules = modules::load()?;
 
-        let mut out = vec![];
+        let mut out = Vec::with_capacity(smodules.len());
 
-        for sm in smodules {
-            let mut found = false;
-            for lm in &lmodules {
-                if lm.name() == sm {
-                    out.push(lm.clone());
-                    found = true;
-                    break;
-                }
-            }
-
-            if !found {
-                warning(&format!("Module not found: {}", sm));
+        for smod in smodules {
+            match lmodules.iter().find(|lmod| lmod.name() == smod) {
+                Some(module) => out.push(module.clone()),
+                None => return Err(format!("Module not found: {}", smod).into()),
             }
         }
 
@@ -127,9 +119,9 @@ impl Create {
     }
 }
 
-fn failure_cleanup<P: AsRef<Path>>(pd: P) {
+fn failure_cleanup<P: AsRef<Path>>(project_dir: P) {
     verbose("Cleaning up after failure...");
-    if let Err(err) = std::fs::remove_dir_all(pd) {
+    if let Err(err) = std::fs::remove_dir_all(project_dir) {
         error(&format!("Failed to clean-up after failure: {}", err));
     }
 }
@@ -153,16 +145,17 @@ fn create_project_dir<P: AsRef<Path>>(wd: P, name: &str) -> Result<PathBuf, Box<
 }
 
 fn install_modules<P: AsRef<Path>>(
-    pd: P,
-    modules: &[Module],
+    project_dir: P,
     project_name: &str,
+    modules: &[Module],
 ) -> Result<(), Box<dyn Error>> {
-    let mut installed = vec![];
-
     for module in modules {
-        // Check dependencies
+        // Install module
+        module.install(&project_dir, project_name)?;
+
+        // Warn for missing dependencies
         for dependency in module.dependencies() {
-            if !installed.contains(dependency) {
+            if !modules.iter().any(|m| m.name() == dependency) {
                 warning(&format!(
                     "Missing dependency for \"{}\" module: \"{}\"",
                     module.name(),
@@ -170,29 +163,25 @@ fn install_modules<P: AsRef<Path>>(
                 ));
             }
         }
-
-        // Install module
-        module.install(&pd, project_name)?;
-        installed.push(module.name().to_string());
     }
 
     Ok(())
 }
 
 fn create_extra<P: AsRef<Path>>(
-    pd: P,
-    name: &str,
+    project_dir: P,
+    project_name: &str,
     modules: &[Module],
 ) -> Result<(), Box<dyn Error>> {
     const CFG_FILE: &str = "cvmod.toml";
-    let modconfig = create_modconfig(name, modules)?;
-    modconfig.save(pd.as_ref().join(CFG_FILE))?;
-    create_bat(pd, CFG_FILE)?;
+    let modconfig = create_modconfig(project_name, modules)?;
+    modconfig.save(project_dir.as_ref().join(CFG_FILE))?;
+    create_bat(project_dir, CFG_FILE)?;
     Ok(())
 }
 
-fn create_modconfig(name: &str, modules: &[Module]) -> Result<ModConfig, Box<dyn Error>> {
-    let mut modconfig = ModConfig::new(name);
+fn create_modconfig(project_name: &str, modules: &[Module]) -> Result<ModConfig, Box<dyn Error>> {
+    let mut modconfig = ModConfig::new(project_name);
 
     // Get extra info from modules
     let mut pakincludes = vec![];
@@ -211,9 +200,9 @@ fn create_modconfig(name: &str, modules: &[Module]) -> Result<ModConfig, Box<dyn
     Ok(modconfig)
 }
 
-fn create_bat<P: AsRef<Path>>(pd: P, cfg: &str) -> Result<(), Box<dyn Error>> {
+fn create_bat<P: AsRef<Path>>(project_dir: P, cfg: &str) -> Result<(), Box<dyn Error>> {
     const BAT_NAME: &str = "build-and-install.bat";
-    let bat_target_path = pd.as_ref().join(BAT_NAME);
+    let bat_target_path = project_dir.as_ref().join(BAT_NAME);
     let bat_ref_path = crate::resources::dir()?.join(BAT_NAME);
 
     let mut bat_contents = std::fs::read_to_string(bat_ref_path)?;
