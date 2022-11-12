@@ -1,6 +1,6 @@
 [package]
 name = "cvmodtool"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["Csányi István <icsanyi96@gmail.com>"]
 edition = "2021"
 description = "Code Vein modding helper tool for managing UE4 projects"
@@ -10,7 +10,7 @@ license = "GPL-3.0-only"
 publish = false
 
 [dependencies]
-clap = { version = "3.0", features = ["derive", "unicode"] }
+clap = { version = "4.0", features = ["derive", "unicode"] }
 serde = { version = "1.0", features = ["derive"] }
 json = { package = "serde_json", version = "1.0" }
 toml = "0.5"
@@ -19,7 +19,7 @@ colour = "0.6"
 
 [dependencies.updater]
 git = "https://github.com/AmionSky/updater"
-rev = "300cf600ba4db07ad5504451b8abbcece2b57cf7"
+rev = "94c81ae52fca1f8ee03194aeb66773eaf524c338"
 features = ["procedures", "ext-zip"]
 optional = true
 
