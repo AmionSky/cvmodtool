@@ -8,13 +8,13 @@ pub mod update;
 pub const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(clap::Parser)]
-#[clap(version = PKG_VERSION, author = "Amion <icsanyi96@gmail.com>")]
+#[command(version = PKG_VERSION, author = "Amion <icsanyi96@gmail.com>")]
 pub struct Opts {
     /// A level of verbosity
-    #[clap(short, long)]
+    #[arg(short, long)]
     verbose: bool,
 
-    #[clap(subcommand)]
+    #[command(subcommand)]
     subcmd: SubCommand,
 }
 

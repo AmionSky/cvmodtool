@@ -10,7 +10,7 @@ pub struct Install {
     pak: Option<PathBuf>,
 
     /// Mod configuration file to use
-    #[clap(short, long, default_value = "cvmod.toml")]
+    #[arg(short, long, default_value = "cvmod.toml")]
     config: PathBuf,
 }
 

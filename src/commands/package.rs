@@ -9,15 +9,15 @@ use walkdir::WalkDir;
 #[derive(clap::Parser)]
 pub struct Package {
     /// Mod configuration file to use
-    #[clap(short, long, default_value = "cvmod.toml")]
+    #[arg(short, long, default_value = "cvmod.toml")]
     config: PathBuf,
 
     /// Don't copy the latest cooked content
-    #[clap(long)]
+    #[arg(long)]
     no_copy: bool,
 
     /// Don't compress the .pak file
-    #[clap(long)]
+    #[arg(long)]
     no_compress: bool,
 }
 

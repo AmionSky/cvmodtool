@@ -10,10 +10,10 @@ pub struct Create {
     /// Name of the project
     name: String,
     /// Creation profile to use
-    #[clap(short, long, default_value = "default")]
+    #[arg(short, long, default_value = "default")]
     profile: String,
     /// Additional modules to install
-    #[clap(short, long)]
+    #[arg(short, long, num_args(0..))]
     modules: Option<Vec<String>>,
 }
 
@@ -114,6 +114,7 @@ impl Create {
         let config = Config::load()?;
         profiles.extend(config.profiles().to_owned());
 
+        // Use .remove to take ownership
         if let Some(mut selected) = profiles.remove(self.profile()) {
             if let Some(mseleted) = self.modules() {
                 selected.append(&mut mseleted.to_owned());
