@@ -95,15 +95,15 @@ fn step_install(state: &mut State, data: &mut UpdateData) -> StepResult {
     // (Re)Create install folder
     let install_path = &data.directory;
     if install_path.is_dir() {
-        std::fs::remove_dir_all(&install_path)?;
+        std::fs::remove_dir_all(install_path)?;
     }
-    std::fs::create_dir(&install_path)?;
+    std::fs::create_dir(install_path)?;
 
     // Unpack asset
     if extract::asset(
         data.asset.as_ref().unwrap().name(),
         data.file.take().unwrap(),
-        &install_path,
+        install_path,
         state.progress().clone(),
     )? == ExtractResult::Cancelled
     {
