@@ -18,10 +18,12 @@ Only need to download the `.exe` then it will download the resources on first us
 ## Configuration
 
 ### config.toml
-The tool needs a `config.toml` next to the `cvmodtool.exe` with contents:
+The tool needs a `config.toml` next to the `cvmodtool.exe`. It'll be created upon running the tool for the first time.
 ```toml
-engine = 'Path\To\UE_4.18' # This folder should contain the "Engine" directory
-moddir = 'Path\To\CodeVein\Content\Paks\~mods' # This folder needs to exist
+# UE 4.18 install folder. (It should contain the "Engine" directory)
+engine = 'Path\To\UE_4.18'
+# Folder where the mods will be installed with the 'install' command.
+moddir = 'Path\To\CodeVein\Content\Paks\~mods'
 
 # Optional
 [profiles] # User defined profiles
@@ -32,7 +34,7 @@ my-profile = ['base']
 Mod configuration file. Automatically created by the `create` command. Make sure to update the `includes` if necessary.
 ```toml
 project = 'TestProject' # Name of the Unreal project
-pakname = 'TestProject_P' # Name of the .pak file to create
+pakname = 'TestProject_P' # Name of the .pak file to create (The '_P' is important)
 includes = ['Maps', 'ModResources'] # Folders/files to include in the final package
 
 # Optional
