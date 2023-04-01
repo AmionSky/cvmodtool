@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Update Rust
         run: rustup update --no-self-update stable
       - name: Install targets
@@ -20,10 +20,11 @@ jobs:
       - name: Build
         run: cargo build --target x86_64-pc-windows-msvc --release
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: executable
           path: target/x86_64-pc-windows-msvc/release/cvmodtool.exe
+          if-no-files-found: error
 
   zip:
     name: Zip Resources
@@ -31,16 +32,17 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install Zip
         run: sudo apt-get install zip
       - name: Zip files
         run: cd resources && zip -r -9 ../resources.zip ./*
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: resources
           path: resources.zip
+          if-no-files-found: error
 
   create:
     name: Create Release
@@ -48,14 +50,12 @@ jobs:
     needs: [build, zip]
     timeout-minutes: 5
     steps:
-      - name: Get version from tag
-        run: echo "TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
       - name: Download artifacts
         uses: actions/download-artifact@v2
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          name: Code Vein Modding Tool ${{ env.TAG }}
+          name: Code Vein Modding Tool ${{ github.ref_name }}
           files: |
             executable/cvmodtool.exe
             resources/resources.zip
