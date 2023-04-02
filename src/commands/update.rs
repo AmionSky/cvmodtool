@@ -56,7 +56,6 @@ impl Update {
 fn update_executable() -> Result<(), Box<dyn Error>> {
     let data = selfexe::UpdateData::new(
         provider(),
-        std::env::current_exe()?,
         Version::parse(PKG_VERSION)?,
         "cvmodtool.exe".to_string(),
     );

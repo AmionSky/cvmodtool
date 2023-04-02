@@ -826,8 +826,8 @@ checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
 
 [[package]]
 name = "updater"
-version = "0.5.2"
-source = "git+https://github.com/AmionSky/updater?rev=94c81ae52fca1f8ee03194aeb66773eaf524c338#94c81ae52fca1f8ee03194aeb66773eaf524c338"
+version = "0.5.3"
+source = "git+https://github.com/AmionSky/updater?rev=470a6e4c7a2d67bb7bf3735e106f41a18c24e648#470a6e4c7a2d67bb7bf3735e106f41a18c24e648"
 dependencies = [
  "fs2",
  "lazy_static",
