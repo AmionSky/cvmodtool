@@ -13,9 +13,9 @@ publish = false
 clap = { version = "3.0", features = ["derive", "unicode"] }
 serde = { version = "1.0", features = ["derive"] }
 json = { package = "serde_json", version = "1.0" }
-toml = "0.5"
+toml = "0.7"
 walkdir = "2.3"
-colour = "0.6"
+colour = "0.7"
 
 [dependencies.updater]
 git = "https://github.com/AmionSky/updater"

@@ -35,7 +35,7 @@ impl Install {
             } else {
                 verbose("Loading mod config...");
                 let (modwd, modconfig) = crate::config::load_modconfig(self.config())?;
-                modconfig.pakfile(&modwd)
+                modconfig.pakfile(modwd)
             }
         };
 
