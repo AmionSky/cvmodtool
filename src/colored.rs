@@ -1,23 +1,25 @@
+use color_print::{cprintln, cformat};
+
 pub static mut USE_VERBOSE: bool = true;
 
 pub fn verbose(text: &str) {
     if unsafe { USE_VERBOSE } {
-        colour::grey_ln!("{}", text);
+        cprintln!("<dim>{}</>", text);
     }
 }
 
 pub fn important(text: &str) {
-    colour::cyan_ln!("{}", text);
+    cprintln!("<cyan>{}</>", text);
 }
 
 pub fn info(text: &str) {
-    colour::white_ln!("{}", text);
+    cprintln!("<white>{}</>", text);
 }
 
 pub fn warning(text: &str) {
-    colour::yellow_ln!("{}", text);
+    cprintln!("<yellow>{}</>", text);
 }
 
 pub fn error(text: &str) {
-    colour::e_red_ln!("{}", text);
+    eprintln!("{}", cformat!("<red>{}</>", text));
 }
