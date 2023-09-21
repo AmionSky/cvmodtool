@@ -6,11 +6,52 @@ use std::path::{Path, PathBuf};
 pub struct ModConfig {
     project: String,
     pakname: String,
-    includes: Vec<PathBuf>,
+    includes: Includes,
     #[serde(skip_serializing, default = "default_packagedir")]
     packagedir: PathBuf,
     #[serde(default)]
     credits: Vec<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum IncludesBC {
+    Simple(Vec<PathBuf>),
+    Detailed {
+        #[serde(default)]
+        cooked: Vec<PathBuf>,
+        #[serde(default)]
+        raw: Vec<PathBuf>,
+    },
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+#[serde(from = "IncludesBC")]
+pub struct Includes {
+    cooked: Vec<PathBuf>,
+    raw: Vec<PathBuf>,
+}
+
+impl Includes {
+    pub fn cooked(&self) -> &Vec<PathBuf> {
+        &self.cooked
+    }
+
+    pub fn raw(&self) -> &Vec<PathBuf> {
+        &self.raw
+    }
+}
+
+impl From<IncludesBC> for Includes {
+    fn from(value: IncludesBC) -> Self {
+        match value {
+            IncludesBC::Simple(cooked) => Self {
+                cooked,
+                raw: vec![],
+            },
+            IncludesBC::Detailed { cooked, raw } => Self { cooked, raw },
+        }
+    }
 }
 
 fn default_packagedir() -> PathBuf {
@@ -23,7 +64,7 @@ impl ModConfig {
             pakname: format!("{}_P", name),
             project: name.to_string(),
             packagedir: default_packagedir(),
-            includes: vec![],
+            includes: Includes::default(),
             credits: vec![],
         }
     }
@@ -73,7 +114,7 @@ impl ModConfig {
     }
 
     /// Package includes
-    pub fn includes(&self) -> &Vec<PathBuf> {
+    pub fn includes(&self) -> &Includes {
         &self.includes
     }
 
@@ -83,8 +124,8 @@ impl ModConfig {
         &self.credits
     }
 
-    pub fn set_includes(&mut self, data: Vec<PathBuf>) {
-        self.includes = data;
+    pub fn set_includes_cooked(&mut self, data: Vec<PathBuf>) {
+        self.includes.cooked = data;
     }
 
     pub fn set_credits(&mut self, data: Vec<String>) {

@@ -53,6 +53,7 @@ impl Package {
             "Saved\\Cooked\\WindowsNoEditor\\{}\\Content",
             modconfig.project()
         ));
+        let raw_content_dir = modwd.join("Content");
 
         if !self.no_copy() {
             if !cooked_content_dir.is_dir() {
@@ -73,6 +74,7 @@ impl Package {
             }
 
             info("Copying package files...");
+            // Copy cooked content
             for entry in WalkDir::new(&cooked_content_dir) {
                 if let Ok(entry) = entry {
                     let absolute = entry.path();
@@ -85,7 +87,35 @@ impl Package {
                         .replace('/', "\\");
 
                     if absolute.is_file()
-                        && modconfig.includes().iter().any(|i| {
+                        && modconfig.includes().cooked().iter().any(|i| {
+                            // Workaround for path starts_with issues
+                            let str_i = i.to_str().unwrap().replace('/', "\\");
+                            str_relative.starts_with(&str_i)
+                        })
+                    {
+                        verbose(&format!("  Copying file: {}", relative.display()));
+                        let target = pak_content_dir.join(relative);
+                        std::fs::create_dir_all(target.parent().ok_or("Path has no parent!")?)?;
+                        std::fs::copy(absolute, target)?;
+                    }
+                } else {
+                    warning("Failed to access a package file!");
+                }
+            }
+            // Copy raw content
+            for entry in WalkDir::new(&raw_content_dir) {
+                if let Ok(entry) = entry {
+                    let absolute = entry.path();
+                    let relative = absolute.strip_prefix(&raw_content_dir)?;
+
+                    // Workaround for path starts_with issues
+                    let str_relative = relative
+                        .to_str()
+                        .ok_or("Failed to convert path to str!")?
+                        .replace('/', "\\");
+
+                    if absolute.is_file()
+                        && modconfig.includes().raw().iter().any(|i| {
                             // Workaround for path starts_with issues
                             let str_i = i.to_str().unwrap().replace('/', "\\");
                             str_relative.starts_with(&str_i)
