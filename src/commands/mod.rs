@@ -16,7 +16,7 @@ fn clap_styles() -> Styles {
         .header(AnsiColor::Yellow.on_default())
         .usage(AnsiColor::Yellow.on_default())
         .literal(AnsiColor::Cyan.on_default())
-        .placeholder(AnsiColor::White.on_default() | Effects::ITALIC)
+        .placeholder(Style::new() | Effects::ITALIC)
         .error(AnsiColor::Red.on_default() | Effects::BOLD)
         .valid(AnsiColor::Cyan.on_default() | Effects::BOLD)
         .invalid(AnsiColor::Yellow.on_default() | Effects::BOLD)
