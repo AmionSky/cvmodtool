@@ -1,4 +1,3 @@
-use crate::colored::info;
 use std::fs::File;
 use std::path::PathBuf;
 use updater::extract::{self, ExtractResult};
@@ -37,15 +36,12 @@ impl UpdateData {
 fn step_check_version(state: &mut State, data: &mut UpdateData) -> StepResult {
     state.set_label("Checking for latest version...".into());
 
-    info(&format!(
-        "Checking for latest version via {}",
-        data.provider.name()
-    ));
+    info!("Checking for latest version via {}", data.provider.name());
     data.provider.fetch()?;
 
     let latest = data.provider.latest()?;
     if latest <= data.version {
-        info("Resources are up-to-date");
+        info!("Resources are up-to-date");
         return Ok(StepAction::Complete);
     }
 
@@ -64,11 +60,11 @@ fn step_download(state: &mut State, data: &mut UpdateData) -> StepResult {
         data.asset.as_ref().unwrap().size() as f64 / 1_000_000.0
     ));
 
-    info(&format!(
+    info!(
         "Downloading resources v{} ({:.2} MB)",
         &data.version,
         data.asset.as_ref().unwrap().size() as f64 / 1_000_000.0
-    ));
+    );
 
     let dl_result = data
         .asset
@@ -90,7 +86,7 @@ fn step_download(state: &mut State, data: &mut UpdateData) -> StepResult {
 fn step_install(state: &mut State, data: &mut UpdateData) -> StepResult {
     state.set_label("Unpacking...".into());
 
-    info("Unpacking resources");
+    info!("Unpacking resources");
 
     // (Re)Create install folder
     let install_path = &data.directory;

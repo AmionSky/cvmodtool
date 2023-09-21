@@ -1,4 +1,3 @@
-use crate::colored::*;
 use crate::config::{Config, ModConfig};
 use clap::Parser;
 use std::error::Error;
@@ -35,17 +34,17 @@ impl Build {
 
     /// Execute command
     pub fn execute(&self) -> Result<(), Box<dyn Error>> {
-        important("Building mod project...");
+        important!("Building mod project...");
 
-        verbose("Loading mod config...");
+        verbose!("Loading mod config...");
         let (modwd, modconfig) = crate::config::load_modconfig(self.config())?;
-        verbose("Loading tool config...");
+        verbose!("Loading tool config...");
         let config = Config::load()?;
 
-        info("Running Unreal Automation Tool (UAT)...");
+        info!("Running Unreal Automation Tool (UAT)...");
         run_uat(&modwd, &modconfig, &config.uat())?;
 
-        info("Success!");
+        info!("Success!");
         Ok(())
     }
 }

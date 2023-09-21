@@ -1,4 +1,3 @@
-use crate::colored::*;
 use crate::config::{Config, ModConfig};
 use crate::resources::modules::{self, Module};
 use clap::Parser;
@@ -36,7 +35,7 @@ impl Create {
 
     /// Execute command
     pub fn execute(&self) -> Result<(), Box<dyn Error>> {
-        important("Creating mod project...");
+        important!("Creating mod project...");
         let working_dir = crate::working_dir()?;
 
         if !name_check(self.name()) {
@@ -51,7 +50,7 @@ impl Create {
             .into());
         }
 
-        info("Installing modules...");
+        info!("Installing modules...");
         let selected_modules = match self.get_modules_to_install() {
             Ok(ret) => ret,
             Err(err) => {
@@ -69,16 +68,13 @@ impl Create {
             return Err(format!("Failed to install modules: {}", err).into());
         }
 
-        info("Creating modconfig & build script...");
+        info!("Creating modconfig & build script...");
         if let Err(err) = create_extra(&project_dir, self.name(), &selected_modules) {
             failure_cleanup(&project_dir);
             return Err(format!("Failed to create modconfig/build script: {}", err).into());
         }
 
-        info(&format!(
-            "Success! Project created at {}",
-            project_dir.display()
-        ));
+        info!("Success! Project created at {}", project_dir.display());
         Ok(())
     }
 
@@ -99,11 +95,11 @@ impl Create {
     }
 
     fn get_specified_modules(&self) -> Result<Vec<String>, Box<dyn Error>> {
-        verbose("Loading profiles...");
+        verbose!("Loading profiles...");
         let mut profiles = crate::resources::profiles::load()?;
 
         // Load user defined profiles
-        verbose("Loading tool config...");
+        verbose!("Loading tool config...");
         let config = Config::load()?;
         profiles.extend(config.profiles().to_owned());
 
@@ -121,9 +117,9 @@ impl Create {
 }
 
 fn failure_cleanup<P: AsRef<Path>>(project_dir: P) {
-    verbose("Cleaning up after failure...");
+    verbose!("Cleaning up after failure...");
     if let Err(err) = std::fs::remove_dir_all(project_dir) {
-        error(&format!("Failed to clean-up after failure: {}", err));
+        error!("Failed to clean-up after failure: {}", err);
     }
 }
 
@@ -157,11 +153,11 @@ fn install_modules<P: AsRef<Path>>(
         // Warn for missing dependencies
         for dependency in module.dependencies() {
             if !modules.iter().any(|m| m.name() == dependency) {
-                warning(&format!(
+                warning!(
                     "Missing dependency for \"{}\" module: \"{}\"",
                     module.name(),
                     dependency
-                ));
+                );
             }
         }
     }

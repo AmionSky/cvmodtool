@@ -1,4 +1,3 @@
-use crate::colored::*;
 use crate::config::Config;
 use clap::Parser;
 use std::error::Error;
@@ -38,14 +37,14 @@ impl Package {
 
     /// Execute command
     pub fn execute(&self) -> Result<(), Box<dyn Error>> {
-        important("Packaging mod project...");
+        important!("Packaging mod project...");
 
-        verbose("Loading mod config...");
+        verbose!("Loading mod config...");
         let (modwd, modconfig) = crate::config::load_modconfig(self.config())?;
-        verbose("Loading tool config...");
+        verbose!("Loading tool config...");
         let config = Config::load()?;
 
-        verbose("Generating paths...");
+        verbose!("Generating paths...");
         let packagedir = modwd.join(modconfig.packagedir());
         let pakdir = packagedir.join(modconfig.pakname());
         let pakfile = modconfig.pakfile(&modwd);
@@ -64,7 +63,7 @@ impl Package {
             }
 
             if pakdir.is_dir() {
-                info("Cleaning up old files...");
+                info!("Cleaning up old files...");
                 if let Err(err) = std::fs::remove_dir_all(&pakdir) {
                     return Err(format!("Failed to clean-up old files: {}", err).into());
                 }
@@ -74,7 +73,7 @@ impl Package {
                 return Err(format!("Failed to create package directory: {}", err).into());
             }
 
-            info("Copying package files...");
+            info!("Copying package files...");
             // Copy cooked content
             for entry in WalkDir::new(&cooked_content_dir) {
                 if let Ok(entry) = entry {
@@ -94,13 +93,13 @@ impl Package {
                             str_relative.starts_with(&str_i)
                         })
                     {
-                        verbose(&format!("  Copying file: {}", relative.display()));
+                        verbose!("  Copying file: {}", relative.display());
                         let target = pak_content_dir.join(relative);
                         std::fs::create_dir_all(target.parent().ok_or("Path has no parent!")?)?;
                         std::fs::copy(absolute, target)?;
                     }
                 } else {
-                    warning("Failed to access a package file!");
+                    warning!("Failed to access a package file!");
                 }
             }
             // Copy raw content
@@ -122,18 +121,18 @@ impl Package {
                             str_relative.starts_with(&str_i)
                         })
                     {
-                        verbose(&format!("  Copying file: {}", relative.display()));
+                        verbose!("  Copying file: {}", relative.display());
                         let target = pak_content_dir.join(relative);
                         std::fs::create_dir_all(target.parent().ok_or("Path has no parent!")?)?;
                         std::fs::copy(absolute, target)?;
                     }
                 } else {
-                    warning("Failed to access a package file!");
+                    warning!("Failed to access a package file!");
                 }
             }
         }
 
-        info("Running UnrealPak...");
+        info!("Running UnrealPak...");
         run_upak(
             &config.upak(),
             &packagedir,
@@ -142,10 +141,7 @@ impl Package {
             !self.no_compress(),
         )?;
 
-        info(&format!(
-            "Success! Pak file created at {}",
-            pakfile.display()
-        ));
+        info!("Success! Pak file created at {}", pakfile.display());
         Ok(())
     }
 }

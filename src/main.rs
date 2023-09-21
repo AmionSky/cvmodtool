@@ -1,11 +1,12 @@
+#[macro_use]
 mod colored;
+
 mod commands;
 mod config;
 mod resources;
 mod utils;
 
 use clap::Parser;
-use colored::*;
 use commands::{Opts, SubCommand};
 use config::Config;
 use std::error::Error;
@@ -13,7 +14,7 @@ use std::path::PathBuf;
 
 fn main() {
     if !Config::check() {
-        important("Creating tool config:");
+        important!("Creating tool config:");
         if let Err(err) = create_tool_config() {
             error_exit(-10, "Failed to create tool config", err);
         }
@@ -21,7 +22,7 @@ fn main() {
 
     #[cfg(feature = "updater")]
     if resources::dir().is_err() || !resources::dir().unwrap().is_dir() {
-        important("Downloading resources:");
+        important!("Downloading resources:");
         let cmd = commands::update::Update::setup();
         if let Err(err) = cmd.execute() {
             error_exit(-11, "Failed to download resources", err);
@@ -31,9 +32,7 @@ fn main() {
     let opts: Opts = Opts::parse();
 
     // Set verbose logging
-    unsafe {
-        USE_VERBOSE = opts.verbose();
-    }
+    colored::USE_VERBOSE.set(opts.verbose()).unwrap();
 
     match opts.subcmd() {
         SubCommand::Create(cmd) => {
@@ -66,7 +65,7 @@ fn main() {
 }
 
 fn error_exit(code: i32, msg: &str, err: Box<dyn Error>) {
-    error(&format!("{}: {}", msg, err));
+    error!("{}: {}", msg, err);
     std::process::exit(code);
 }
 
@@ -88,9 +87,9 @@ pub fn working_dir() -> Result<PathBuf, Box<dyn Error>> {
 
 fn create_tool_config() -> Result<(), Box<dyn Error>> {
     let mut buffer = String::new();
-    info("Path to UE 4.18:");
-    verbose("This folder should contain the \"Engine\" directory");
-    verbose(r"Example: C:\Engines\Unreal\UE_4.18");
+    info!("Path to UE 4.18:");
+    verbose!("This folder should contain the \"Engine\" directory");
+    verbose!(r"Example: C:\Engines\Unreal\UE_4.18");
     std::io::stdin().read_line(&mut buffer)?;
     let engine = PathBuf::from(buffer.trim_end());
     if !engine.is_dir() {
@@ -98,8 +97,8 @@ fn create_tool_config() -> Result<(), Box<dyn Error>> {
     }
 
     buffer.clear();
-    info("Path to Code Vein \"~mods\" folder:");
-    verbose(
+    info!("Path to Code Vein \"~mods\" folder:");
+    verbose!(
         r"Example: C:\Program Files (x86)\Steam\steamapps\common\CODE VEIN\CodeVein\Content\Paks\~mods",
     );
     std::io::stdin().read_line(&mut buffer)?;

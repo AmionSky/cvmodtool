@@ -1,4 +1,3 @@
-use crate::colored::*;
 use crate::resources::REPLACE;
 use serde::Deserialize;
 use std::error::Error;
@@ -23,7 +22,7 @@ pub fn load() -> Result<Vec<Module>, Box<dyn Error>> {
         if module_config_path.is_file() {
             match Module::load(module_config_path) {
                 Ok(module) => modules.push(module),
-                Err(err) => warning(&format!("Failed to load module: {}", err)),
+                Err(err) => warning!("Failed to load module: {}", err),
             }
         }
     }
@@ -109,7 +108,7 @@ impl Module {
         target: P,
         project_name: &str,
     ) -> Result<(), Box<dyn Error>> {
-        info(&format!("Installing module: {}", self.name()));
+        info!("Installing module: {}", self.name());
         let cfgfile = Some(OsStr::new(CONFIG_FILE));
 
         for entry in WalkDir::new(self.path()).follow_links(true) {
@@ -141,7 +140,7 @@ impl Module {
                 // If the file exists, merge if possible
                 match target_path.extension().and_then(OsStr::to_str) {
                     Some("uproject") => {
-                        verbose(&format!("  Merging file: {}", &rel_path.display()));
+                        verbose!("  Merging file: {}", &rel_path.display());
 
                         // UProject file merger
                         use json::Value;
@@ -158,7 +157,7 @@ impl Module {
                         writer.sync_all()?;
                     }
                     _ => {
-                        verbose(&format!("  Replacing file: {}", &rel_path.display()));
+                        verbose!("  Replacing file: {}", &rel_path.display());
 
                         if modify {
                             modifycopy(abs_path, target_path, project_name)?;
@@ -174,7 +173,7 @@ impl Module {
                     std::fs::create_dir_all(parent)?;
                 }
 
-                verbose(&format!("  Copying file: {}", &rel_path.display()));
+                verbose!("  Copying file: {}", &rel_path.display());
 
                 if modify {
                     modifycopy(abs_path, target_path, project_name)?;

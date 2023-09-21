@@ -1,4 +1,3 @@
-use crate::colored::*;
 use crate::config::Config;
 use clap::Parser;
 use std::error::Error;
@@ -28,13 +27,13 @@ impl Install {
 
     /// Execute command
     pub fn execute(&self) -> Result<(), Box<dyn Error>> {
-        important("Installing mod package...");
+        important!("Installing mod package...");
 
         let pakfile = {
             if let Some(pak) = self.pak() {
                 pak.to_owned()
             } else {
-                verbose("Loading mod config...");
+                verbose!("Loading mod config...");
                 let (modwd, modconfig) = crate::config::load_modconfig(self.config())?;
                 modconfig.pakfile(modwd)
             }
@@ -46,7 +45,7 @@ impl Install {
             );
         }
 
-        verbose("Loading tool config...");
+        verbose!("Loading tool config...");
         let config = Config::load()?;
 
         let pakfilename = pakfile
@@ -57,10 +56,7 @@ impl Install {
             return Err(format!("Failed to copy .pak file: {}", err).into());
         }
 
-        info(&format!(
-            "Success! Pak file installed to {}",
-            target.display()
-        ));
+        info!("Success! Pak file installed to {}", target.display());
         Ok(())
     }
 }

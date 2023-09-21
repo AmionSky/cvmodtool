@@ -1,4 +1,3 @@
-use crate::colored::*;
 use crate::resources::update as resupdate;
 use clap::Parser;
 use std::error::Error;
@@ -32,7 +31,7 @@ impl Update {
 
     /// Execute command
     pub fn execute(&self) -> Result<(), Box<dyn Error>> {
-        important("Running updater...");
+        important!("Running updater...");
 
         let mut executable = self.executable;
         let mut resources = self.resources;
@@ -63,7 +62,7 @@ fn update_executable() -> Result<(), Box<dyn Error>> {
     let mut procedure = selfexe::create(data);
     procedure.execute()?;
 
-    info("Successfully updated the executable!");
+    info!("Successfully updated the executable!");
     Ok(())
 }
 
@@ -83,7 +82,7 @@ fn update_resources() -> Result<(), Box<dyn Error>> {
 
     if procedure.data().success {
         std::fs::write(version_file, procedure.data().version.to_string())?;
-        info("Successfully updated the resources!");
+        info!("Successfully updated the resources!");
     }
 
     Ok(())

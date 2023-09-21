@@ -1,25 +1,65 @@
-use color_print::{cprintln, cformat};
+use once_cell::sync::OnceCell;
 
-pub static mut USE_VERBOSE: bool = true;
+pub static USE_VERBOSE: OnceCell<bool> = OnceCell::new();
 
-pub fn verbose(text: &str) {
-    if unsafe { USE_VERBOSE } {
-        cprintln!("<dim>{}</>", text);
-    }
+macro_rules! styled {
+    ($stream:expr, $style:expr, $($arg:tt)*) => {{
+        use std::io::Write;
+        let mut stream = $stream.lock();
+        let _ = ::std::write!(&mut stream, "{}", $style.render());
+        let _ = ::std::write!(&mut stream, $($arg)*);
+        let _ = ::std::writeln!(&mut stream, "{}", $style.render_reset());
+    }};
 }
 
-pub fn important(text: &str) {
-    cprintln!("<cyan>{}</>", text);
+macro_rules! verbose {
+    ($($arg:tt)*) => {{
+        if let Some(true) = crate::colored::USE_VERBOSE.get() {
+            styled!(
+                ::anstream::stdout(),
+                ::anstyle::Style::new().dimmed(),
+                $($arg)*
+            )
+        }
+    }};
 }
 
-pub fn info(text: &str) {
-    cprintln!("<white>{}</>", text);
+macro_rules! info {
+    ($($arg:tt)*) => {{
+        styled!(
+            ::anstream::stdout(),
+            ::anstyle::Style::new().bold(),
+            $($arg)*
+        )
+    }};
 }
 
-pub fn warning(text: &str) {
-    cprintln!("<yellow>{}</>", text);
+macro_rules! important {
+    ($($arg:tt)*) => {{
+        styled!(
+            ::anstream::stdout(),
+            ::anstyle::AnsiColor::Cyan.on_default(),
+            $($arg)*
+        )
+    }};
 }
 
-pub fn error(text: &str) {
-    eprintln!("{}", cformat!("<red>{}</>", text));
+macro_rules! warning {
+    ($($arg:tt)*) => {{
+        styled!(
+            ::anstream::stderr(),
+            ::anstyle::AnsiColor::Yellow.on_default(),
+            $($arg)*
+        )
+    }};
+}
+
+macro_rules! error {
+    ($($arg:tt)*) => {{
+        styled!(
+            ::anstream::stderr(),
+            ::anstyle::AnsiColor::Red.on_default(),
+            $($arg)*
+        )
+    }};
 }
