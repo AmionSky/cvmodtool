@@ -1,23 +1,24 @@
 use crate::colored::*;
 use crate::config::Config;
+use clap::Parser;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use walkdir::WalkDir;
 
 /// Package a mod project into a .pak file
-#[derive(clap::Parser)]
+#[derive(Parser)]
 pub struct Package {
     /// Mod configuration file to use
-    #[clap(short, long, default_value = "cvmod.toml")]
+    #[arg(short, long, default_value = "cvmod.toml")]
     config: PathBuf,
 
     /// Don't copy the latest cooked content
-    #[clap(long)]
+    #[arg(long)]
     no_copy: bool,
 
     /// Don't compress the .pak file
-    #[clap(long)]
+    #[arg(long)]
     no_compress: bool,
 }
 

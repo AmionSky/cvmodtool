@@ -1,16 +1,17 @@
 use crate::colored::*;
 use crate::config::Config;
+use clap::Parser;
 use std::error::Error;
 use std::path::PathBuf;
 
 /// Copy the mod's pak file into the game's content directory
-#[derive(clap::Parser)]
+#[derive(Parser)]
 pub struct Install {
     /// Pak file to install. Using this the config won't be used.
     pak: Option<PathBuf>,
 
     /// Mod configuration file to use
-    #[clap(short, long, default_value = "cvmod.toml")]
+    #[arg(short, long, default_value = "cvmod.toml")]
     config: PathBuf,
 }
 

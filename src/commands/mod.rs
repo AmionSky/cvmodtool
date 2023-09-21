@@ -1,3 +1,6 @@
+use clap::builder::Styles;
+use clap::{Parser, Subcommand};
+
 pub mod build;
 pub mod create;
 pub mod install;
@@ -7,14 +10,30 @@ pub mod update;
 
 pub const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[derive(clap::Parser)]
-#[clap(version = PKG_VERSION, author = "Amion <icsanyi96@gmail.com>")]
+fn clap_styles() -> Styles {
+    use clap::builder::styling::*;
+    Styles::styled()
+        .header(AnsiColor::Yellow.on_default())
+        .usage(AnsiColor::Yellow.on_default())
+        .literal(AnsiColor::Cyan.on_default())
+        .placeholder(AnsiColor::White.on_default() | Effects::ITALIC)
+        .error(AnsiColor::Red.on_default() | Effects::BOLD)
+        .valid(AnsiColor::Cyan.on_default() | Effects::BOLD)
+        .invalid(AnsiColor::Yellow.on_default() | Effects::BOLD)
+}
+
+#[derive(Parser)]
+#[command(
+    version = PKG_VERSION,
+    styles = clap_styles(),
+    about = format!("Code Vein Modding Tool v{PKG_VERSION}")
+)]
 pub struct Opts {
     /// A level of verbosity
-    #[clap(short, long)]
+    #[arg(short, long)]
     verbose: bool,
 
-    #[clap(subcommand)]
+    #[command(subcommand)]
     subcmd: SubCommand,
 }
 
@@ -28,7 +47,7 @@ impl Opts {
     }
 }
 
-#[derive(clap::Subcommand)]
+#[derive(Subcommand)]
 pub enum SubCommand {
     Create(create::Create),
     Build(build::Build),

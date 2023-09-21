@@ -1,19 +1,20 @@
 use crate::colored::*;
 use crate::config::{Config, ModConfig};
 use crate::resources::modules::{self, Module};
+use clap::Parser;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 
 /// Create a new Unreal Engine project for modding Code Vein.
-#[derive(clap::Parser)]
+#[derive(Parser)]
 pub struct Create {
     /// Name of the project
     name: String,
     /// Creation profile to use
-    #[clap(short, long, default_value = "default")]
+    #[arg(short, long, default_value = "default")]
     profile: String,
     /// Additional modules to install
-    #[clap(short, long, multiple_values = true)]
+    #[arg(short, long, num_args(0..))]
     modules: Option<Vec<String>>,
 }
 
@@ -195,7 +196,7 @@ fn create_modconfig(project_name: &str, modules: &[Module]) -> Result<ModConfig,
     credits.sort_unstable();
     credits.dedup();
 
-    modconfig.set_includes(pakincludes);
+    modconfig.set_includes_cooked(pakincludes);
     modconfig.set_credits(credits);
     Ok(modconfig)
 }

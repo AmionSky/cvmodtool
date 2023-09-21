@@ -1,5 +1,6 @@
 use crate::colored::*;
 use crate::resources::update as resupdate;
+use clap::Parser;
 use std::error::Error;
 use std::path::Path;
 use updater::procedures::selfexe;
@@ -10,14 +11,14 @@ pub const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 const VERSION_FILE: &str = "version";
 
 /// Update the tool and its resources
-#[derive(clap::Parser)]
+#[derive(Parser)]
 pub struct Update {
     /// Only update the executable
-    #[clap(short, long)]
+    #[arg(short, long)]
     executable: bool,
 
     /// Only update the resources
-    #[clap(short, long)]
+    #[arg(short, long)]
     resources: bool,
 }
 
