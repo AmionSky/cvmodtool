@@ -1,6 +1,6 @@
 [package]
 name = "cvmodtool"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 authors = ["Amion <icsanyi96@gmail.com>"]
 description = "Code Vein modding helper tool for managing UE4 projects"
@@ -17,11 +17,11 @@ toml = "0.8.0"
 walkdir = "2.3.0"
 once_cell = "1.18.0"
 anstyle = "1.0.0"
-anstream = "0.5.0"
+anstream = "0.6.0"
 
 [dependencies.updater]
 git = "https://github.com/AmionSky/updater"
-rev = "46838561dc6f57a8738dcf02606cc5b648284c7e"
+rev = "39d8f0cf0475a3c0b41adcfe703e1006b0c6a360"
 features = ["procedures", "ext-zip"]
 optional = true
 
