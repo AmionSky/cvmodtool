@@ -1,6 +1,6 @@
-use crate::config::{Config, ModConfig};
+use crate::config::{ModConfig, ToolConfig};
+use anyhow::{anyhow, Result};
 use clap::Parser;
-use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -33,36 +33,35 @@ impl Build {
     }
 
     /// Execute command
-    pub fn execute(&self) -> Result<(), Box<dyn Error>> {
+    pub fn execute(&self) -> Result<()> {
         important!("Building mod project...");
 
         verbose!("Loading mod config...");
-        let (modwd, modconfig) = crate::config::load_modconfig(self.config())?;
+        let modconfig = ModConfig::load(self.config())?;
         verbose!("Loading tool config...");
-        let config = Config::load()?;
+        let config = ToolConfig::load()?;
 
         info!("Running Unreal Automation Tool (UAT)...");
-        run_uat(&modwd, &modconfig, &config.uat())?;
+        run_uat(&modconfig, &config.uat())?;
 
         info!("Success!");
         Ok(())
     }
 }
 
-fn run_uat(modwd: &Path, modconfig: &ModConfig, uat: &Path) -> Result<(), Box<dyn Error>> {
-    let uproject = modwd.join(modconfig.uproject());
+fn run_uat(modconfig: &ModConfig, uat: &Path) -> Result<()> {
     let mut uat_child = Command::new(uat)
         .stdin(Stdio::null())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .args(UAT_ARGS.iter())
-        .arg(format!("-project=\"{}\"", uproject.display()))
+        .arg(format!("-project=\"{}\"", modconfig.uproject().display()))
         .spawn()
-        .expect("UAT failed to start");
+        .map_err(|_| anyhow!("UAT failed to start!"))?;
 
     let uat_exitcode = uat_child.wait()?;
     if !uat_exitcode.success() {
-        return Err("UAT failed!".into());
+        return Err(anyhow!("UAT failed with exit code {uat_exitcode}!"));
     }
 
     Ok(())

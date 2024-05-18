@@ -1,16 +1,24 @@
 use serde::{Deserialize, Serialize};
-use std::error::Error;
 use std::path::{Path, PathBuf};
+use thiserror::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ModConfig {
+    /// Name of the Unreal project
     project: String,
+    /// Desired name of the .pak file
     pakname: String,
+    /// Files/folders to include in the package
     includes: Includes,
+    /// Relative path/name of the directory to do packaging in
     #[serde(skip_serializing, default = "default_packagedir")]
     packagedir: PathBuf,
+    /// Credits of the included modules
     #[serde(default)]
     credits: Vec<String>,
+    /// Config working directory
+    #[serde(skip)]
+    wd: PathBuf,
 }
 
 #[derive(Deserialize)]
@@ -23,33 +31,51 @@ enum IncludesBC {
         #[serde(default)]
         raw: Vec<PathBuf>,
     },
+    DetailedV2 {
+        #[serde(default)]
+        cook: Vec<PathBuf>,
+        #[serde(default)]
+        copy: Vec<PathBuf>,
+    },
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(from = "IncludesBC")]
 pub struct Includes {
-    cooked: Vec<PathBuf>,
-    raw: Vec<PathBuf>,
+    /// Files and folders to cook and then include
+    cook: Vec<PathBuf>,
+    /// Files and folders to just include as-is
+    copy: Vec<PathBuf>,
 }
 
 impl Includes {
-    pub fn cooked(&self) -> &Vec<PathBuf> {
-        &self.cooked
+    pub fn cook(&self) -> &Vec<PathBuf> {
+        &self.cook
     }
 
-    pub fn raw(&self) -> &Vec<PathBuf> {
-        &self.raw
+    pub fn copy(&self) -> &Vec<PathBuf> {
+        &self.copy
+    }
+
+    pub fn set_cook(&mut self, value: Vec<PathBuf>) {
+        self.cook = value;
+    }
+
+    #[allow(dead_code)] // TODO: need to update modules to support already cooked assets
+    pub fn set_copy(&mut self, value: Vec<PathBuf>) {
+        self.copy = value;
     }
 }
 
 impl From<IncludesBC> for Includes {
     fn from(value: IncludesBC) -> Self {
         match value {
-            IncludesBC::Simple(cooked) => Self {
-                cooked,
-                raw: vec![],
+            IncludesBC::Simple(cook) => Self { cook, copy: vec![] },
+            IncludesBC::Detailed { cooked, raw } => Self {
+                cook: cooked,
+                copy: raw,
             },
-            IncludesBC::Detailed { cooked, raw } => Self { cooked, raw },
+            IncludesBC::DetailedV2 { cook, copy } => Self { cook, copy },
         }
     }
 }
@@ -59,38 +85,40 @@ fn default_packagedir() -> PathBuf {
 }
 
 impl ModConfig {
-    pub fn new(name: &str) -> Self {
+    pub fn new<P: AsRef<Path>>(name: &str, wd: P) -> Self {
         Self {
-            pakname: format!("{}_P", name),
+            pakname: format!("Z_{}_P", name),
             project: name.to_string(),
             packagedir: default_packagedir(),
             includes: Includes::default(),
             credits: vec![],
+            wd: wd.as_ref().to_path_buf(),
         }
     }
 
     /// Load from disk
-    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, Box<dyn Error>> {
-        if !path.as_ref().is_file() {
-            return Err(format!("Mod config file ({}) not found!", path.as_ref().display()).into());
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, ModConfigError> {
+        let wd = crate::working_dir().map_err(ModConfigError::WD)?;
+        let mut path = wd.join(path.as_ref());
+
+        if !path.is_file() {
+            return Err(ModConfigError::NotFound(path.display().to_string()));
         }
 
-        let content = match std::fs::read_to_string(path) {
-            Ok(ret) => ret,
-            Err(err) => return Err(format!("Failed to read mod config: {}", err).into()),
+        let content = std::fs::read_to_string(&path).map_err(ModConfigError::Read)?;
+        let mut config: Self = toml::from_str(&content).map_err(ModConfigError::Parse)?;
+        config.wd = {
+            path.pop();
+            path
         };
-        let modconfig: Self = match toml::from_str(&content) {
-            Ok(ret) => ret,
-            Err(err) => return Err(format!("Failed to parse mod config: {}", err).into()),
-        };
-        Ok(modconfig)
+
+        Ok(config)
     }
 
     /// Save to disk
-    pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<(), Box<dyn Error>> {
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<(), ModConfigError> {
         let contents = toml::to_string_pretty(self)?;
-        std::fs::write(path, contents)?;
-        Ok(())
+        std::fs::write(path, contents).map_err(ModConfigError::Write)
     }
 
     /// Pak file name
@@ -98,17 +126,24 @@ impl ModConfig {
         &self.pakname
     }
 
+    /// Pak file absolute path
+    pub fn pakfile(&self) -> PathBuf {
+        let mut path = self.wd().join(self.packagedir());
+        path.push(format!("{}.pak", self.pakname()));
+        path
+    }
+
     /// Project name
     pub fn project(&self) -> &String {
         &self.project
     }
 
-    /// UProject relative path
+    /// UProject absolute path
     pub fn uproject(&self) -> PathBuf {
-        PathBuf::from(format!("{}.uproject", &self.project))
+        self.wd().join(format!("{}.uproject", &self.project()))
     }
 
-    /// Package directory
+    /// Package directory relative path
     pub fn packagedir(&self) -> &PathBuf {
         &self.packagedir
     }
@@ -118,41 +153,39 @@ impl ModConfig {
         &self.includes
     }
 
+    /// Package includes (mutable)
+    pub fn includes_mut(&mut self) -> &mut Includes {
+        &mut self.includes
+    }
+
     /// Credits
     #[allow(dead_code)]
     pub fn credits(&self) -> &Vec<String> {
         &self.credits
     }
 
-    pub fn set_includes_cooked(&mut self, data: Vec<PathBuf>) {
-        self.includes.cooked = data;
-    }
-
     pub fn set_credits(&mut self, data: Vec<String>) {
         self.credits = data;
     }
 
-    /// Pak file absolute path
-    pub fn pakfile<P: AsRef<Path>>(&self, wd: P) -> PathBuf {
-        let abs_packagedir = wd.as_ref().join(self.packagedir());
-        abs_packagedir.join(format!("{}.pak", self.pakname()))
+    /// Mod working directory
+    pub fn wd(&self) -> &PathBuf {
+        &self.wd
     }
 }
 
-/// Loads the mod config and returns both the config and the direcotry containing it.
-pub fn load_modconfig<P: AsRef<Path>>(path: P) -> Result<(PathBuf, ModConfig), Box<dyn Error>> {
-    let wd = crate::working_dir()?;
-    let modconfig_path = wd.join(path.as_ref());
-    if !modconfig_path.is_file() {
-        return Err(format!("Mod config file ({}) not found!", path.as_ref().display()).into());
-    }
-
-    let modconfig = ModConfig::load(&modconfig_path)?;
-    let modwd = {
-        let mut modwd = modconfig_path;
-        modwd.pop();
-        modwd
-    };
-
-    Ok((modwd, modconfig))
+#[derive(Debug, Error)]
+pub enum ModConfigError {
+    #[error("Mod config file ({0}) not found!")]
+    NotFound(String),
+    #[error("Failed to read mod config. ({0})")]
+    Read(#[source] std::io::Error),
+    #[error("Failed to parse mod config. ({0})")]
+    Parse(#[from] toml::de::Error),
+    #[error("Failed to serialize mod config. ({0})")]
+    Serialize(#[from] toml::ser::Error),
+    #[error("Failed to save mod config. ({0})")]
+    Write(#[source] std::io::Error),
+    #[error("Failed to get the current working directory. ({0})")]
+    WD(#[source] std::io::Error),
 }

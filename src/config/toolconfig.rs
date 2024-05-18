@@ -1,19 +1,19 @@
 use crate::resources::profiles::Profiles;
 use serde::{Deserialize, Serialize};
-use std::error::Error;
 use std::path::PathBuf;
+use thiserror::Error;
 
-const REL_PATH: &str = "config.toml";
+const FILE_NAME: &str = "config.toml";
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Config {
+pub struct ToolConfig {
     engine: PathBuf,
     moddir: PathBuf,
     #[serde(default)]
     profiles: Profiles,
 }
 
-impl Config {
+impl ToolConfig {
     pub fn new(engine: PathBuf, moddir: PathBuf) -> Self {
         Self {
             engine,
@@ -32,26 +32,17 @@ impl Config {
     }
 
     /// Saves the config to file
-    pub fn save(&self) -> Result<(), Box<dyn Error>> {
+    pub fn save(&self) -> Result<(), ToolConfigError> {
         let content = toml::to_string_pretty(self)?;
-        if let Err(e) = std::fs::write(config_path()?, content) {
-            return Err(format!("Failed to save config: {}", e).into());
-        }
-        Ok(())
+        let path = config_path()?;
+        std::fs::write(path, content).map_err(ToolConfigError::Write)
     }
 
     /// Loads the config from file
-    pub fn load() -> Result<Self, Box<dyn Error>> {
-        let content = match std::fs::read_to_string(config_path()?) {
-            Ok(ret) => ret,
-            Err(err) => return Err(format!("Failed to read config: {}", err).into()),
-        };
-        let config: Self = match toml::from_str(&content) {
-            Ok(ret) => ret,
-            Err(err) => return Err(format!("Failed to parse config: {}", err).into()),
-        };
-
-        Ok(config)
+    pub fn load() -> Result<Self, ToolConfigError> {
+        let path = config_path()?;
+        let content = std::fs::read_to_string(path).map_err(ToolConfigError::Read)?;
+        toml::from_str(&content).map_err(ToolConfigError::Parse)
     }
 
     pub fn uat(&self) -> PathBuf {
@@ -71,8 +62,22 @@ impl Config {
     }
 }
 
-fn config_path() -> Result<PathBuf, Box<dyn Error>> {
-    let mut path = crate::executable_dir()?;
-    path.push(REL_PATH);
+fn config_path() -> Result<PathBuf, ToolConfigError> {
+    let mut path = crate::executable_dir().map_err(ToolConfigError::Path)?;
+    path.push(FILE_NAME);
     Ok(path)
+}
+
+#[derive(Debug, Error)]
+pub enum ToolConfigError {
+    #[error("Failed to read tool config. ({0})")]
+    Read(#[source] std::io::Error),
+    #[error("Failed to parse tool config. ({0})")]
+    Parse(#[from] toml::de::Error),
+    #[error("Failed to serialize tool config. ({0})")]
+    Serialize(#[from] toml::ser::Error),
+    #[error("Failed to save tool config. ({0})")]
+    Write(#[source] std::io::Error),
+    #[error("Failed to find the tool config directory. ({0})")]
+    Path(#[source] std::io::Error),
 }

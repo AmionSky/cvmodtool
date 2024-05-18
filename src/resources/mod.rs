@@ -5,6 +5,6 @@ pub mod update;
 
 pub const REPLACE: &str = "PROJECTNAME";
 
-pub fn dir() -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
+pub fn dir() -> Result<std::path::PathBuf, std::io::Error> {
     Ok(crate::executable_dir()?.join("resources"))
 }

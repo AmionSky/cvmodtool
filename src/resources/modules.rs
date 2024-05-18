@@ -1,6 +1,6 @@
 use crate::resources::REPLACE;
+use anyhow::{anyhow, Result};
 use serde::Deserialize;
-use std::error::Error;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
@@ -8,7 +8,7 @@ use walkdir::WalkDir;
 const REL_PATH: &str = "modules";
 const CONFIG_FILE: &str = "module.toml";
 
-pub fn load() -> Result<Vec<Module>, Box<dyn Error>> {
+pub fn load() -> Result<Vec<Module>, std::io::Error> {
     let module_dirs = std::fs::read_dir(dir()?)?;
     let mut modules = vec![];
 
@@ -49,20 +49,20 @@ pub struct Module {
 
 impl Module {
     /// Load from disk
-    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, Box<dyn Error>> {
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
         let content = match std::fs::read_to_string(&path) {
             Ok(ret) => ret,
-            Err(err) => return Err(format!("Failed to read module: {}", err).into()),
+            Err(err) => return Err(anyhow!("Failed to read module: {err}")),
         };
         let mut module: Self = match toml::from_str(&content) {
             Ok(ret) => ret,
-            Err(err) => return Err(format!("Failed to parse module: {}", err).into()),
+            Err(err) => return Err(anyhow!("Failed to parse module: {err}")),
         };
 
         module.path = path
             .as_ref()
             .parent()
-            .ok_or("Failed to get module directory!")?
+            .ok_or_else(|| anyhow!("Failed to get module directory!"))?
             .to_owned();
 
         Ok(module)
@@ -103,11 +103,7 @@ impl Module {
         &self.credits
     }
 
-    pub fn install<P: AsRef<Path>>(
-        &self,
-        target: P,
-        project_name: &str,
-    ) -> Result<(), Box<dyn Error>> {
+    pub fn install<P: AsRef<Path>>(&self, target: P, project_name: &str) -> Result<()> {
         info!("Installing module: {}", self.name());
         let cfgfile = Some(OsStr::new(CONFIG_FILE));
 
@@ -168,7 +164,9 @@ impl Module {
                 }
             } else {
                 // If the file doesn't exist
-                let parent = target_path.parent().ok_or("Target file has no parent!")?;
+                let parent = target_path
+                    .parent()
+                    .ok_or_else(|| anyhow!("Target file has no parent!"))?;
                 if !parent.is_dir() {
                     std::fs::create_dir_all(parent)?;
                 }
@@ -187,13 +185,13 @@ impl Module {
     }
 }
 
-fn renamefile<P: AsRef<Path>>(file: P, replace: &str) -> Result<PathBuf, Box<dyn Error>> {
+fn renamefile<P: AsRef<Path>>(file: P, replace: &str) -> Result<PathBuf> {
     let filename = file
         .as_ref()
         .file_name()
-        .ok_or("renamefile: Unable to get filename!")?
+        .ok_or_else(|| anyhow!("renamefile: Unable to get filename!"))?
         .to_str()
-        .ok_or("renamefile: Unable to convert filename!")?;
+        .ok_or_else(|| anyhow!("renamefile: Unable to convert filename!"))?;
     let rfilename = filename.replace(REPLACE, replace);
     let mut new_path = file.as_ref().to_path_buf();
     new_path.set_file_name(rfilename);
@@ -204,19 +202,19 @@ fn modifycopy<P: AsRef<Path>, Q: AsRef<Path>>(
     s: P,
     t: Q,
     replace: &str,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), std::io::Error> {
     let content = modifyfile(s, replace)?;
     std::fs::write(t, content)?;
     Ok(())
 }
 
-fn modifyfile<P: AsRef<Path>>(file: P, replace: &str) -> Result<String, Box<dyn Error>> {
+fn modifyfile<P: AsRef<Path>>(file: P, replace: &str) -> Result<String, std::io::Error> {
     let content = std::fs::read_to_string(file.as_ref())?;
     let rcontent = content.replace(REPLACE, replace);
     Ok(rcontent)
 }
 
-fn dir() -> Result<PathBuf, Box<dyn Error>> {
+fn dir() -> Result<PathBuf, std::io::Error> {
     let mut path = super::dir()?;
     path.push(REL_PATH);
     Ok(path)

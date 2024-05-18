@@ -6,14 +6,21 @@ mod config;
 mod resources;
 mod utils;
 
+use anyhow::{anyhow, Error, Result};
 use clap::Parser;
 use commands::{Opts, SubCommand};
-use config::Config;
-use std::error::Error;
+use config::ToolConfig;
 use std::path::PathBuf;
 
 fn main() {
-    if !Config::check() {
+    // Parse command line args
+    let opts: Opts = Opts::parse();
+
+    // Set verbose logging
+    colored::USE_VERBOSE.set(opts.verbose()).unwrap();
+
+    // Check if tool config exist and interactively create it if it doesn't
+    if !ToolConfig::check() {
         important!("Creating tool config:");
         if let Err(err) = create_tool_config() {
             error_exit(-10, "Failed to create tool config", err);
@@ -28,11 +35,6 @@ fn main() {
             error_exit(-11, "Failed to download resources", err);
         }
     }
-
-    let opts: Opts = Opts::parse();
-
-    // Set verbose logging
-    colored::USE_VERBOSE.set(opts.verbose()).unwrap();
 
     match opts.subcmd() {
         SubCommand::Create(cmd) => {
@@ -64,12 +66,12 @@ fn main() {
     }
 }
 
-fn error_exit(code: i32, msg: &str, err: Box<dyn Error>) {
+fn error_exit(code: i32, msg: &str, err: Error) {
     error!("{}: {}", msg, err);
     std::process::exit(code);
 }
 
-pub fn executable_dir() -> Result<PathBuf, Box<dyn Error>> {
+pub fn executable_dir() -> std::io::Result<PathBuf> {
     #[cfg(test)]
     return working_dir();
 
@@ -81,11 +83,11 @@ pub fn executable_dir() -> Result<PathBuf, Box<dyn Error>> {
     }
 }
 
-pub fn working_dir() -> Result<PathBuf, Box<dyn Error>> {
-    Ok(std::env::current_dir()?)
+pub fn working_dir() -> std::io::Result<PathBuf> {
+    std::env::current_dir()
 }
 
-fn create_tool_config() -> Result<(), Box<dyn Error>> {
+fn create_tool_config() -> Result<()> {
     let mut buffer = String::new();
     info!("Path to UE 4.18:");
     verbose!("This folder should contain the \"Engine\" directory");
@@ -93,7 +95,7 @@ fn create_tool_config() -> Result<(), Box<dyn Error>> {
     std::io::stdin().read_line(&mut buffer)?;
     let engine = PathBuf::from(buffer.trim_end());
     if !engine.is_dir() {
-        return Err("Engine directory is not a valid direcoty".into());
+        return Err(anyhow!("Engine directory is not a valid direcoty"));
     }
 
     buffer.clear();
@@ -104,10 +106,10 @@ fn create_tool_config() -> Result<(), Box<dyn Error>> {
     std::io::stdin().read_line(&mut buffer)?;
     let moddir = PathBuf::from(buffer.trim_end());
     if !moddir.is_dir() {
-        return Err("Mods directory is not a valid direcoty".into());
+        return Err(anyhow!("Mods directory is not a valid direcoty"));
     }
 
-    let config = Config::new(engine, moddir);
+    let config = ToolConfig::new(engine, moddir);
     config.save()?;
 
     Ok(())

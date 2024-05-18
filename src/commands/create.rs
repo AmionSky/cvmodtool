@@ -1,7 +1,7 @@
-use crate::config::{Config, ModConfig};
+use crate::config::{ModConfig, ToolConfig};
 use crate::resources::modules::{self, Module};
+use anyhow::{anyhow, Result};
 use clap::Parser;
-use std::error::Error;
 use std::path::{Path, PathBuf};
 
 /// Create a new Unreal Engine project for modding Code Vein.
@@ -34,51 +34,50 @@ impl Create {
     }
 
     /// Execute command
-    pub fn execute(&self) -> Result<(), Box<dyn Error>> {
+    pub fn execute(&self) -> Result<()> {
         important!("Creating mod project...");
         let working_dir = crate::working_dir()?;
 
         if !name_check(self.name()) {
-            return Err("Project name has incorrect format".into());
+            return Err(anyhow!("Project name has incorrect format"));
         }
 
         if check_project_dir(&working_dir, self.name()) {
-            return Err(format!(
+            return Err(anyhow!(
                 "A project with the name \"{}\" already exist in the current directory!",
                 self.name()
-            )
-            .into());
+            ));
         }
 
         info!("Installing modules...");
         let selected_modules = match self.get_modules_to_install() {
             Ok(ret) => ret,
             Err(err) => {
-                return Err(format!("Failed to get modules: {}", err).into());
+                return Err(anyhow!("Failed to get modules: {}", err));
             }
         };
 
         let project_dir = match create_project_dir(&working_dir, self.name()) {
             Ok(ret) => ret,
-            Err(err) => return Err(format!("Failed to create project directory: {}", err).into()),
+            Err(err) => return Err(anyhow!("Failed to create project directory: {}", err)),
         };
 
         if let Err(err) = install_modules(&project_dir, self.name(), &selected_modules) {
             failure_cleanup(&project_dir);
-            return Err(format!("Failed to install modules: {}", err).into());
+            return Err(anyhow!("Failed to install modules: {}", err));
         }
 
         info!("Creating modconfig & build script...");
         if let Err(err) = create_extra(&project_dir, self.name(), &selected_modules) {
             failure_cleanup(&project_dir);
-            return Err(format!("Failed to create modconfig/build script: {}", err).into());
+            return Err(anyhow!("Failed to create modconfig/build script: {}", err));
         }
 
         info!("Success! Project created at {}", project_dir.display());
         Ok(())
     }
 
-    fn get_modules_to_install(&self) -> Result<Vec<Module>, Box<dyn Error>> {
+    fn get_modules_to_install(&self) -> Result<Vec<Module>> {
         let smodules = self.get_specified_modules()?;
         let lmodules = modules::load()?;
 
@@ -87,20 +86,20 @@ impl Create {
         for smod in smodules {
             match lmodules.iter().find(|lmod| lmod.name() == smod) {
                 Some(module) => out.push(module.clone()),
-                None => return Err(format!("Module not found: {}", smod).into()),
+                None => return Err(anyhow!("Module not found: {}", smod)),
             }
         }
 
         Ok(out)
     }
 
-    fn get_specified_modules(&self) -> Result<Vec<String>, Box<dyn Error>> {
+    fn get_specified_modules(&self) -> Result<Vec<String>> {
         verbose!("Loading profiles...");
         let mut profiles = crate::resources::profiles::load()?;
 
         // Load user defined profiles
         verbose!("Loading tool config...");
-        let config = Config::load()?;
+        let config = ToolConfig::load()?;
         profiles.extend(config.profiles().to_owned());
 
         // Use .remove to take ownership
@@ -112,7 +111,7 @@ impl Create {
             return Ok(selected);
         }
 
-        Err("Specified profile was not found!".into())
+        Err(anyhow!("Specified profile was not found!"))
     }
 }
 
@@ -127,6 +126,12 @@ fn name_check(name: &str) -> bool {
     if name.is_empty() || name.chars().any(|c| c.is_whitespace()) || name == ".." {
         return false;
     }
+
+    if name.len() > 20 {
+        warning!("Project name must not be longer than 20 characters!");
+        return false;
+    }
+
     PathBuf::from(name).components().count() == 1
 }
 
@@ -135,7 +140,7 @@ fn check_project_dir<P: AsRef<Path>>(wd: P, name: &str) -> bool {
     project_dir.exists()
 }
 
-fn create_project_dir<P: AsRef<Path>>(wd: P, name: &str) -> Result<PathBuf, Box<dyn Error>> {
+fn create_project_dir<P: AsRef<Path>>(wd: P, name: &str) -> Result<PathBuf> {
     let project_dir = wd.as_ref().join(name);
     std::fs::create_dir(&project_dir)?;
     Ok(project_dir)
@@ -145,7 +150,7 @@ fn install_modules<P: AsRef<Path>>(
     project_dir: P,
     project_name: &str,
     modules: &[Module],
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     for module in modules {
         // Install module
         module.install(&project_dir, project_name)?;
@@ -169,16 +174,20 @@ fn create_extra<P: AsRef<Path>>(
     project_dir: P,
     project_name: &str,
     modules: &[Module],
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     const CFG_FILE: &str = "cvmod.toml";
-    let modconfig = create_modconfig(project_name, modules)?;
+    let modconfig = create_modconfig(project_name, &project_dir, modules)?;
     modconfig.save(project_dir.as_ref().join(CFG_FILE))?;
     create_bat(project_dir, CFG_FILE)?;
     Ok(())
 }
 
-fn create_modconfig(project_name: &str, modules: &[Module]) -> Result<ModConfig, Box<dyn Error>> {
-    let mut modconfig = ModConfig::new(project_name);
+fn create_modconfig<P: AsRef<Path>>(
+    project_name: &str,
+    project_dir: P,
+    modules: &[Module],
+) -> Result<ModConfig> {
+    let mut modconfig = ModConfig::new(project_name, project_dir);
 
     // Get extra info from modules
     let mut pakincludes = vec![];
@@ -192,12 +201,12 @@ fn create_modconfig(project_name: &str, modules: &[Module]) -> Result<ModConfig,
     credits.sort_unstable();
     credits.dedup();
 
-    modconfig.set_includes_cooked(pakincludes);
+    modconfig.includes_mut().set_cook(pakincludes);
     modconfig.set_credits(credits);
     Ok(modconfig)
 }
 
-fn create_bat<P: AsRef<Path>>(project_dir: P, cfg: &str) -> Result<(), Box<dyn Error>> {
+fn create_bat<P: AsRef<Path>>(project_dir: P, cfg: &str) -> Result<()> {
     const BAT_NAME: &str = "build-and-install.bat";
     let bat_target_path = project_dir.as_ref().join(BAT_NAME);
     let bat_ref_path = crate::resources::dir()?.join(BAT_NAME);

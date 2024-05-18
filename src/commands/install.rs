@@ -1,6 +1,6 @@
-use crate::config::Config;
+use crate::config::{ModConfig, ToolConfig};
+use anyhow::{anyhow, Result};
 use clap::Parser;
-use std::error::Error;
 use std::path::PathBuf;
 
 /// Copy the mod's pak file into the game's content directory
@@ -26,7 +26,7 @@ impl Install {
     }
 
     /// Execute command
-    pub fn execute(&self) -> Result<(), Box<dyn Error>> {
+    pub fn execute(&self) -> Result<()> {
         important!("Installing mod package...");
 
         let pakfile = {
@@ -34,26 +34,26 @@ impl Install {
                 pak.to_owned()
             } else {
                 verbose!("Loading mod config...");
-                let (modwd, modconfig) = crate::config::load_modconfig(self.config())?;
-                modconfig.pakfile(modwd)
+                let modconfig = ModConfig::load(self.config())?;
+                modconfig.pakfile()
             }
         };
 
         if !pakfile.is_file() {
-            return Err(
-                "Package file was not found! Make sure to package the project first.".into(),
-            );
+            return Err(anyhow!(
+                "Package file was not found! Make sure to package the project first."
+            ));
         }
 
         verbose!("Loading tool config...");
-        let config = Config::load()?;
+        let config = ToolConfig::load()?;
 
         let pakfilename = pakfile
             .file_name()
-            .ok_or("Failed to get the .pak file name")?;
+            .ok_or_else(|| anyhow!("Failed to get the .pak file name"))?;
         let target = config.moddir().join(pakfilename);
         if let Err(err) = std::fs::copy(pakfile, &target) {
-            return Err(format!("Failed to copy .pak file: {}", err).into());
+            return Err(anyhow!("Failed to copy .pak file: {}", err));
         }
 
         info!("Success! Pak file installed to {}", target.display());

@@ -1,6 +1,6 @@
-use crate::config::Config;
+use crate::config::{ModConfig, ToolConfig};
+use anyhow::{anyhow, Result};
 use clap::Parser;
-use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use walkdir::WalkDir;
@@ -36,41 +36,41 @@ impl Package {
     }
 
     /// Execute command
-    pub fn execute(&self) -> Result<(), Box<dyn Error>> {
+    pub fn execute(&self) -> Result<()> {
         important!("Packaging mod project...");
 
         verbose!("Loading mod config...");
-        let (modwd, modconfig) = crate::config::load_modconfig(self.config())?;
+        let modconfig = ModConfig::load(self.config())?;
         verbose!("Loading tool config...");
-        let config = Config::load()?;
+        let config = ToolConfig::load()?;
 
         verbose!("Generating paths...");
-        let packagedir = modwd.join(modconfig.packagedir());
+        let packagedir = modconfig.wd().join(modconfig.packagedir());
         let pakdir = packagedir.join(modconfig.pakname());
-        let pakfile = modconfig.pakfile(&modwd);
+        let pakfile = modconfig.pakfile();
         let pak_content_dir = pakdir.join("CodeVein\\Content");
-        let cooked_content_dir = modwd.join(format!(
+        let cooked_content_dir = modconfig.wd().join(format!(
             "Saved\\Cooked\\WindowsNoEditor\\{}\\Content",
             modconfig.project()
         ));
-        let raw_content_dir = modwd.join("Content");
+        let copy_content_dir = modconfig.wd().join("Content");
 
         if !self.no_copy() {
             if !cooked_content_dir.is_dir() {
-                return Err(
-                    "No cooked content was found! Make sure to build the project first.".into(),
-                );
+                return Err(anyhow!(
+                    "No cooked content was found! Make sure to build the project first."
+                ));
             }
 
             if pakdir.is_dir() {
                 info!("Cleaning up old files...");
                 if let Err(err) = std::fs::remove_dir_all(&pakdir) {
-                    return Err(format!("Failed to clean-up old files: {}", err).into());
+                    return Err(anyhow!("Failed to clean-up old files: {}", err));
                 }
             }
 
             if let Err(err) = std::fs::create_dir_all(&pak_content_dir) {
-                return Err(format!("Failed to create package directory: {}", err).into());
+                return Err(anyhow!("Failed to create package directory: {}", err));
             }
 
             info!("Copying package files...");
@@ -83,11 +83,11 @@ impl Package {
                     // Workaround for path starts_with issues
                     let str_relative = relative
                         .to_str()
-                        .ok_or("Failed to convert path to str!")?
+                        .ok_or_else(|| anyhow!("Failed to convert path to str!"))?
                         .replace('/', "\\");
 
                     if absolute.is_file()
-                        && modconfig.includes().cooked().iter().any(|i| {
+                        && modconfig.includes().cook().iter().any(|i| {
                             // Workaround for path starts_with issues
                             let str_i = i.to_str().unwrap().replace('/', "\\");
                             str_relative.starts_with(&str_i)
@@ -95,7 +95,11 @@ impl Package {
                     {
                         verbose!("  Copying file: {}", relative.display());
                         let target = pak_content_dir.join(relative);
-                        std::fs::create_dir_all(target.parent().ok_or("Path has no parent!")?)?;
+                        std::fs::create_dir_all(
+                            target
+                                .parent()
+                                .ok_or_else(|| anyhow!("Path has no parent!"))?,
+                        )?;
                         std::fs::copy(absolute, target)?;
                     }
                 } else {
@@ -103,19 +107,19 @@ impl Package {
                 }
             }
             // Copy raw content
-            for entry in WalkDir::new(&raw_content_dir) {
+            for entry in WalkDir::new(&copy_content_dir) {
                 if let Ok(entry) = entry {
                     let absolute = entry.path();
-                    let relative = absolute.strip_prefix(&raw_content_dir)?;
+                    let relative = absolute.strip_prefix(&copy_content_dir)?;
 
                     // Workaround for path starts_with issues
                     let str_relative = relative
                         .to_str()
-                        .ok_or("Failed to convert path to str!")?
+                        .ok_or_else(|| anyhow!("Failed to convert path to str!"))?
                         .replace('/', "\\");
 
                     if absolute.is_file()
-                        && modconfig.includes().raw().iter().any(|i| {
+                        && modconfig.includes().copy().iter().any(|i| {
                             // Workaround for path starts_with issues
                             let str_i = i.to_str().unwrap().replace('/', "\\");
                             str_relative.starts_with(&str_i)
@@ -123,7 +127,11 @@ impl Package {
                     {
                         verbose!("  Copying file: {}", relative.display());
                         let target = pak_content_dir.join(relative);
-                        std::fs::create_dir_all(target.parent().ok_or("Path has no parent!")?)?;
+                        std::fs::create_dir_all(
+                            target
+                                .parent()
+                                .ok_or_else(|| anyhow!("Path has no parent!"))?,
+                        )?;
                         std::fs::copy(absolute, target)?;
                     }
                 } else {
@@ -152,7 +160,7 @@ fn run_upak(
     pakdir: &Path,
     pakfile: &Path,
     compress: bool,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     let filelist = packagedir.join("filelist.txt");
 
     // Create filelist.txt
@@ -160,7 +168,7 @@ fn run_upak(
         &filelist,
         format!("\"{}\\*.*\" \"..\\..\\..\\*.*\" ", pakdir.display()),
     ) {
-        return Err(format!("Failed to create filelist.txt: {}", err).into());
+        return Err(anyhow!("Failed to create filelist.txt: {err}"));
     }
 
     // Run UnrealPak
@@ -176,11 +184,13 @@ fn run_upak(
         command.arg("-compress");
     }
 
-    let mut child = command.spawn().expect("UnrealPak failed to start");
+    let mut child = command
+        .spawn()
+        .map_err(|_| anyhow!("UnrealPak failed to start!"))?;
 
     let exitcode = child.wait()?;
     if !exitcode.success() {
-        return Err("UnrealPak failed!".into());
+        return Err(anyhow!("UnrealPak failed with exit code {exitcode}!"));
     }
 
     Ok(())

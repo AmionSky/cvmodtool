@@ -1,25 +1,25 @@
+use anyhow::{anyhow, Result};
 use std::collections::HashMap;
-use std::error::Error;
 use std::path::PathBuf;
 
 const REL_PATH: &str = "profiles.toml";
 
 pub type Profiles = HashMap<String, Vec<String>>;
 
-pub fn load() -> Result<Profiles, Box<dyn Error>> {
+pub fn load() -> Result<Profiles> {
     let content = match std::fs::read_to_string(file()?) {
         Ok(ret) => ret,
-        Err(err) => return Err(format!("Failed to read profiles: {}", err).into()),
+        Err(err) => return Err(anyhow!("Failed to read profiles: {err}")),
     };
     let profiles: Profiles = match toml::from_str(&content) {
         Ok(ret) => ret,
-        Err(err) => return Err(format!("Failed to parse profiles: {}", err).into()),
+        Err(err) => return Err(anyhow!("Failed to parse profiles: {err}")),
     };
 
     Ok(profiles)
 }
 
-fn file() -> Result<PathBuf, Box<dyn Error>> {
+fn file() -> Result<PathBuf, std::io::Error> {
     let mut path = super::dir()?;
     path.push(REL_PATH);
     Ok(path)

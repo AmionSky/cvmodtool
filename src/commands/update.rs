@@ -1,6 +1,6 @@
 use crate::resources::update as resupdate;
+use anyhow::{anyhow, Result};
 use clap::Parser;
-use std::error::Error;
 use std::path::Path;
 use updater::procedures::selfexe;
 use updater::provider::{GitHubProvider, Provider};
@@ -30,7 +30,7 @@ impl Update {
     }
 
     /// Execute command
-    pub fn execute(&self) -> Result<(), Box<dyn Error>> {
+    pub fn execute(&self) -> Result<()> {
         important!("Running updater...");
 
         let mut executable = self.executable;
@@ -53,20 +53,22 @@ impl Update {
     }
 }
 
-fn update_executable() -> Result<(), Box<dyn Error>> {
+fn update_executable() -> Result<()> {
     let data = selfexe::UpdateData::new(
         provider(),
         Version::parse(PKG_VERSION)?,
         "cvmodtool.exe".to_string(),
     );
     let mut procedure = selfexe::create(data);
-    procedure.execute()?;
+    if let Err(error) = procedure.execute() {
+        return Err(anyhow!("Failed to update self! ({error})"));
+    }
 
     info!("Successfully updated the executable!");
     Ok(())
 }
 
-fn update_resources() -> Result<(), Box<dyn Error>> {
+fn update_resources() -> Result<()> {
     let resources_dir = crate::resources::dir()?;
     let version_file = resources_dir.join(VERSION_FILE);
 
@@ -78,7 +80,9 @@ fn update_resources() -> Result<(), Box<dyn Error>> {
         resources_dir,
     );
     let mut procedure = resupdate::create(data);
-    procedure.execute()?;
+    if let Err(error) = procedure.execute() {
+        return Err(anyhow!("Failed to update resources! ({error})"));
+    }
 
     if procedure.data().success {
         std::fs::write(version_file, procedure.data().version.to_string())?;
@@ -88,7 +92,7 @@ fn update_resources() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn read_file<P: AsRef<Path>>(version_file: P) -> Result<Version, Box<dyn Error>> {
+fn read_file<P: AsRef<Path>>(version_file: P) -> Result<Version> {
     if version_file.as_ref().exists() {
         let text = std::fs::read_to_string(version_file)?;
         Ok(Version::parse(&text)?)
