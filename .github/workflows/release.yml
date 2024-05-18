@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Update Rust
         run: rustup update --no-self-update stable
       - name: Install targets
@@ -20,7 +20,7 @@ jobs:
       - name: Build
         run: cargo build --target x86_64-pc-windows-msvc --release
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: executable
           path: target/x86_64-pc-windows-msvc/release/cvmodtool.exe
@@ -32,13 +32,13 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install Zip
         run: sudo apt-get install zip
       - name: Zip files
         run: cd resources && zip -r -9 ../resources.zip ./*
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: resources
           path: resources.zip
@@ -51,9 +51,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           name: Code Vein Modding Tool ${{ github.ref_name }}
           files: |
