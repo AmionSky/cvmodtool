@@ -4,7 +4,7 @@ use clap::Parser;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-const UAT_ARGS: [&str; 11] = [
+const UAT_ARGS: [&str; 12] = [
     "BuildCookRun",
     "-nocompile",
     "-nocompileeditor",
@@ -13,6 +13,7 @@ const UAT_ARGS: [&str; 11] = [
     "-nop4",
     "-cook",
     "-skipstage",
+    "-SkipCookingEditorContent",
     "-ue4exe=UE4Editor-Cmd.exe",
     "-targetplatform=Win64",
     "-utf8output",
