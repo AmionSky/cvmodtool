@@ -1,6 +1,6 @@
 [package]
 name = "cvmodtool"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2021"
 authors = ["Amion <icsanyi96@gmail.com>"]
 description = "Code Vein modding helper tool for managing UE4 projects"
