@@ -44,8 +44,6 @@ pub struct Module {
     #[serde(default)]
     pakinclude: Vec<PathBuf>,
     #[serde(default)]
-    pakcopy: Vec<PathBuf>,
-    #[serde(default)]
     credits: Vec<String>,
 }
 
@@ -98,11 +96,6 @@ impl Module {
     /// Gets the files/directories that should be included in the final .pak file
     pub fn pakinclude(&self) -> &Vec<PathBuf> {
         &self.pakinclude
-    }
-
-    /// Gets the files/directories that should be copied to the final .pak file
-    pub fn pakcopy(&self) -> &Vec<PathBuf> {
-        &self.pakcopy
     }
 
     /// Gets the credits of the module

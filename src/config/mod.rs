@@ -1,5 +1,5 @@
 mod modconfig;
 mod toolconfig;
 
-pub use modconfig::ModConfig;
-pub use toolconfig::ToolConfig;
+pub use modconfig::{ModConfig, ModConfigError};
+pub use toolconfig::{ToolConfig, ToolConfigError};

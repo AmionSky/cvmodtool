@@ -49,7 +49,7 @@ fn main() {
         }
         SubCommand::Package(cmd) => {
             if let Err(err) = cmd.execute() {
-                error_exit(-3, "Failed to package the project", err);
+                error_exit(-3, "Failed to package the project", err.into());
             }
         }
         SubCommand::Install(cmd) => {

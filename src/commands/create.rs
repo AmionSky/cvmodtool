@@ -191,24 +191,17 @@ fn create_modconfig<P: AsRef<Path>>(
 
     // Get extra info from modules
     let mut pakincludes = vec![];
-    let mut pakcopy = vec![];
     let mut credits = vec![];
     for module in modules {
         pakincludes.append(&mut module.pakinclude().to_owned());
-        pakcopy.append(&mut module.pakcopy().to_owned());
         credits.append(&mut module.credits().to_owned());
     }
     pakincludes.sort_unstable();
     pakincludes.dedup();
-    pakcopy.sort_unstable();
-    pakcopy.dedup();
     credits.sort_unstable();
     credits.dedup();
 
-
-    let includes = modconfig.includes_mut();
-    includes.set_cook(pakincludes);
-    includes.set_copy(pakcopy);
+    modconfig.set_includes(pakincludes);
     modconfig.set_credits(credits);
     Ok(modconfig)
 }

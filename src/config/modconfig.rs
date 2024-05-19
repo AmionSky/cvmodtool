@@ -24,48 +24,24 @@ pub struct ModConfig {
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum IncludesBC {
+    Simple(Vec<PathBuf>),
     Detailed {
         #[serde(default, alias = "cooked")]
         cook: Vec<PathBuf>,
-        #[serde(default, alias = "raw")]
-        copy: Vec<PathBuf>,
+        //#[serde(default, alias = "raw")]
+        //copy: Vec<PathBuf>,
     },
-    Simple(Vec<PathBuf>),
-    
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(from = "IncludesBC")]
-pub struct Includes {
-    /// Files and folders to cook and then include
-    cook: Vec<PathBuf>,
-    /// Files and folders to just include as-is
-    copy: Vec<PathBuf>,
-}
-
-impl Includes {
-    pub fn cook(&self) -> &Vec<PathBuf> {
-        &self.cook
-    }
-
-    pub fn copy(&self) -> &Vec<PathBuf> {
-        &self.copy
-    }
-
-    pub fn set_cook(&mut self, value: Vec<PathBuf>) {
-        self.cook = value;
-    }
-
-    pub fn set_copy(&mut self, value: Vec<PathBuf>) {
-        self.copy = value;
-    }
-}
+pub struct Includes(Vec<PathBuf>);
 
 impl From<IncludesBC> for Includes {
     fn from(value: IncludesBC) -> Self {
         match value {
-            IncludesBC::Detailed { cook, copy } => Self { cook, copy },
-            IncludesBC::Simple(cook) => Self { cook, copy: vec![] },
+            IncludesBC::Simple(includes) => Self(includes),
+            IncludesBC::Detailed { cook } => Self(cook),
         }
     }
 }
@@ -139,21 +115,16 @@ impl ModConfig {
     }
 
     /// Package includes
-    pub fn includes(&self) -> &Includes {
-        &self.includes
+    pub fn includes(&self) -> &Vec<PathBuf> {
+        &self.includes.0
     }
 
-    /// Package includes (mutable)
-    pub fn includes_mut(&mut self) -> &mut Includes {
-        &mut self.includes
+    /// Set package includes
+    pub fn set_includes(&mut self, includes: Vec<PathBuf>) {
+        self.includes = Includes(includes);
     }
 
-    /// Credits
-    #[allow(dead_code)]
-    pub fn credits(&self) -> &Vec<String> {
-        &self.credits
-    }
-
+    /// Set credits
     pub fn set_credits(&mut self, data: Vec<String>) {
         self.credits = data;
     }

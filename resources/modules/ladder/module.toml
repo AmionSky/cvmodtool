@@ -1,5 +1,4 @@
 name = 'ladder'
 dependencies = ['extensions']
 pakinclude = ['ModResources\BP_ModLadder']
-pakcopy = ['Environment\FieldGimmick\Blueprints\BP_Ladder']
 credits = ['Amion']
