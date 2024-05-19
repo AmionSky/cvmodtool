@@ -24,18 +24,11 @@ pub struct ModConfig {
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum IncludesBC {
-    // Newest format should always be first
-    DetailedV2 {
-        #[serde(default)]
-        cook: Vec<PathBuf>,
-        #[serde(default)]
-        copy: Vec<PathBuf>,
-    },
     Detailed {
-        #[serde(default)]
-        cooked: Vec<PathBuf>,
-        #[serde(default)]
-        raw: Vec<PathBuf>,
+        #[serde(default, alias = "cooked")]
+        cook: Vec<PathBuf>,
+        #[serde(default, alias = "raw")]
+        copy: Vec<PathBuf>,
     },
     Simple(Vec<PathBuf>),
     
@@ -71,11 +64,7 @@ impl Includes {
 impl From<IncludesBC> for Includes {
     fn from(value: IncludesBC) -> Self {
         match value {
-            IncludesBC::DetailedV2 { cook, copy } => Self { cook, copy },
-            IncludesBC::Detailed { cooked, raw } => Self {
-                cook: cooked,
-                copy: raw,
-            },
+            IncludesBC::Detailed { cook, copy } => Self { cook, copy },
             IncludesBC::Simple(cook) => Self { cook, copy: vec![] },
         }
     }
