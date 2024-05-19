@@ -53,7 +53,7 @@ impl Package {
             "Saved\\Cooked\\WindowsNoEditor\\{}\\Content",
             modconfig.project()
         ));
-        let copy_content_dir = modconfig.wd().join("Content");
+        let copy_content_dir = modconfig.wd().join("ContentPreCooked");
 
         if !self.no_copy() {
             if !cooked_content_dir.is_dir() {

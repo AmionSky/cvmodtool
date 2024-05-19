@@ -72,10 +72,10 @@ fn error_exit(code: i32, msg: &str, err: Error) {
 }
 
 pub fn executable_dir() -> std::io::Result<PathBuf> {
-    #[cfg(test)]
-    return working_dir();
+    #[cfg(debug_assertions)]
+    return Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR")));
 
-    #[cfg(not(test))]
+    #[cfg(not(debug_assertions))]
     {
         let mut path = std::env::current_exe()?;
         path.pop();

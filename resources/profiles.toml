@@ -1,7 +1,6 @@
-full = ['base', 'extensions', 'gitsupport', 'enemies', 'spawner', 'interactive', 'stateful', 'startmap', 'workmapdoor']
-default = ['base', 'extensions', 'enemies', 'spawner', 'interactive', 'startmap']
+full = ['base', 'extensions', 'gitsupport', 'enemies', 'spawner', 'interactive', 'stateful', 'startmap', 'workmapdoor', 'ladder']
+default = ['base', 'extensions', 'enemies', 'spawner', 'interactive', 'stateful', 'startmap', 'workmapdoor', 'ladder']
 min = ['base']
 empty = []
 
-map = ['base', 'extensions', 'enemies', 'spawner', 'interactive', 'stateful', 'startmap', 'workmapdoor']
 nocompile = ['base', 'enemies', 'spawner', 'startmap']

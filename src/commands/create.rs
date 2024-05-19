@@ -53,24 +53,24 @@ impl Create {
         let selected_modules = match self.get_modules_to_install() {
             Ok(ret) => ret,
             Err(err) => {
-                return Err(anyhow!("Failed to get modules: {}", err));
+                return Err(anyhow!("Failed to get modules: {err}"));
             }
         };
 
         let project_dir = match create_project_dir(&working_dir, self.name()) {
             Ok(ret) => ret,
-            Err(err) => return Err(anyhow!("Failed to create project directory: {}", err)),
+            Err(err) => return Err(anyhow!("Failed to create project directory: {err}")),
         };
 
         if let Err(err) = install_modules(&project_dir, self.name(), &selected_modules) {
             failure_cleanup(&project_dir);
-            return Err(anyhow!("Failed to install modules: {}", err));
+            return Err(anyhow!("Failed to install modules: {err}"));
         }
 
         info!("Creating modconfig & build script...");
         if let Err(err) = create_extra(&project_dir, self.name(), &selected_modules) {
             failure_cleanup(&project_dir);
-            return Err(anyhow!("Failed to create modconfig/build script: {}", err));
+            return Err(anyhow!("Failed to create modconfig/build script: {err}"));
         }
 
         info!("Success! Project created at {}", project_dir.display());
@@ -191,17 +191,24 @@ fn create_modconfig<P: AsRef<Path>>(
 
     // Get extra info from modules
     let mut pakincludes = vec![];
+    let mut pakcopy = vec![];
     let mut credits = vec![];
     for module in modules {
         pakincludes.append(&mut module.pakinclude().to_owned());
-        credits.append(&mut module.credits().to_owned())
+        pakcopy.append(&mut module.pakcopy().to_owned());
+        credits.append(&mut module.credits().to_owned());
     }
     pakincludes.sort_unstable();
     pakincludes.dedup();
+    pakcopy.sort_unstable();
+    pakcopy.dedup();
     credits.sort_unstable();
     credits.dedup();
 
-    modconfig.includes_mut().set_cook(pakincludes);
+
+    let includes = modconfig.includes_mut();
+    includes.set_cook(pakincludes);
+    includes.set_copy(pakcopy);
     modconfig.set_credits(credits);
     Ok(modconfig)
 }

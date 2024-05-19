@@ -24,19 +24,21 @@ pub struct ModConfig {
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum IncludesBC {
-    Simple(Vec<PathBuf>),
-    Detailed {
-        #[serde(default)]
-        cooked: Vec<PathBuf>,
-        #[serde(default)]
-        raw: Vec<PathBuf>,
-    },
+    // Newest format should always be first
     DetailedV2 {
         #[serde(default)]
         cook: Vec<PathBuf>,
         #[serde(default)]
         copy: Vec<PathBuf>,
     },
+    Detailed {
+        #[serde(default)]
+        cooked: Vec<PathBuf>,
+        #[serde(default)]
+        raw: Vec<PathBuf>,
+    },
+    Simple(Vec<PathBuf>),
+    
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -61,7 +63,6 @@ impl Includes {
         self.cook = value;
     }
 
-    #[allow(dead_code)] // TODO: need to update modules to support already cooked assets
     pub fn set_copy(&mut self, value: Vec<PathBuf>) {
         self.copy = value;
     }
@@ -70,12 +71,12 @@ impl Includes {
 impl From<IncludesBC> for Includes {
     fn from(value: IncludesBC) -> Self {
         match value {
-            IncludesBC::Simple(cook) => Self { cook, copy: vec![] },
+            IncludesBC::DetailedV2 { cook, copy } => Self { cook, copy },
             IncludesBC::Detailed { cooked, raw } => Self {
                 cook: cooked,
                 copy: raw,
             },
-            IncludesBC::DetailedV2 { cook, copy } => Self { cook, copy },
+            IncludesBC::Simple(cook) => Self { cook, copy: vec![] },
         }
     }
 }

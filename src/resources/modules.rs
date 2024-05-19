@@ -44,6 +44,8 @@ pub struct Module {
     #[serde(default)]
     pakinclude: Vec<PathBuf>,
     #[serde(default)]
+    pakcopy: Vec<PathBuf>,
+    #[serde(default)]
     credits: Vec<String>,
 }
 
@@ -98,6 +100,11 @@ impl Module {
         &self.pakinclude
     }
 
+    /// Gets the files/directories that should be copied to the final .pak file
+    pub fn pakcopy(&self) -> &Vec<PathBuf> {
+        &self.pakcopy
+    }
+
     /// Gets the credits of the module
     pub fn credits(&self) -> &Vec<String> {
         &self.credits
@@ -141,7 +148,7 @@ impl Module {
                         // UProject file merger
                         use json::Value;
 
-                        let content = modifyfile(abs_path, project_name)?;
+                        let content = modifyfile(abs_path, project_name)?; // TODO: should check if modify is true?
 
                         let mut a: Value = json::from_str(&std::fs::read_to_string(&target_path)?)?;
                         let b: Value = json::from_str(&content)?;
