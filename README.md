@@ -4,7 +4,7 @@ Code Vein modding helper tool for managing UE4 projects.
 ## Installation
 Download at [Releases](https://github.com/AmionSky/cvmodtool/releases).
 
-Only need to download the `.exe` then it will download the resources on first use.
+Only need to download the `.exe`, it will download the resources on first use.
 <br>*(Or manually download the resources and unzip it next to the executable)*
 
 ![console output preview](https://github.com/AmionSky/cvmodtool/blob/master/readmeres/cvmodtool.jpg?raw=true)
@@ -24,10 +24,6 @@ The tool needs a `config.toml` next to the `cvmodtool.exe`. It'll be created upo
 engine = 'Path\To\UE_4.18'
 # Folder where the mods will be installed with the 'install' command.
 moddir = 'Path\To\CodeVein\Content\Paks\~mods'
-
-# Optional
-[profiles] # User defined profiles
-my-profile = ['base']
 ```
 
 ### cvmod.toml
@@ -40,8 +36,10 @@ credits = ['Amion'] # (Optional) Credits of the included modules (unused)
 
 # Folders/files to include in the final package
 [includes]
-cooked = ['Maps', 'ModResources'] # Assets that should be 'cooked'
-raw = [] # Pre-cooked assets or files that should be included as-is
+# Assets in the "Content" folder which 'cooked' variant should be included
+cook = ['Maps', 'ModResources']
+# Pre-cooked assets in the "ContentPreCooked" folder that should be included as-is
+copy = []
 ```
 
 ## Profiles
@@ -52,7 +50,6 @@ Profiles used for project creation. The profiles can be found in `resources\prof
 |full|Includes all the modules.|
 |min|Minimal profile. Only includes the `base` module.|
 |empty|Doesn't include any module. *(Not even `base`)*|
-|map|Include all modules that could be useful for custom maps|
 |nocompile|Include all modules that does not require C++ code compilation|
 
 ## Modules
@@ -60,14 +57,15 @@ Modules are packages of project content that you can include on `create`. The mo
 |Name|Description|
 |-|-|
 |`base`|The base of the Unreal project. Should always include.|
-|`extensions`|C++ code. For tighter integration with Code Vein.|
+|`extensions`|C++ code by SkacikPL. For tighter integration with Code Vein.|
 |`gitsupport`|`gitignore` and `gitattributes` file.|
 |`spawner`|Contains the ActorProxySpawner.|
 |`interactive`|Contains the Interactive Object Base.|
 |`enemies`|Dummy actors of all the enemies in the game.|
-|`startmap`|Starting `work` map. *(With removed reflection capture)*|
+|`startmap`|Starting `work` map with navmesh and removed reflection capture|
 |`workmapdoor`|Spawns an actor in the base that you can access to enter the `work` map.|
-|`stateful`|Contains mistle and enemy spawner that you can use to emulate the main gamemode. Works even with unloading sub levels. Requires the `LevelState` actor in the persistent level.|
+|`stateful`|Contains "stateful" mistle and enemy spawner that you can use to emulate the main gamemode. Works even with unloading sub levels _(not tested recently)_. Requires the `LevelState` and `LevelOrigin` actors in the persistent level. Run the level in the editor to see any error messages caused by incorrect setup.|
+|`ladder`|Ladder with height adjustment. For AI companions to recognize it as ladder, create a `NavLinkProxy` with its Area Class set to `NavArea_Ladder`.|
 
 ## Commands
 *For more information on all the commands just use the `--help` option argument.*
@@ -85,7 +83,10 @@ Examples:
 cvmodtool.exe create TestProject
 ```
 ```
-cvmodtool.exe create TestProject --profile empty --modules base gitsupport
+cvmodtool.exe create TestProject --profile full
+```
+```
+cvmodtool.exe create TestProject -p empty -m base gitsupport
 ```
 ---
 
@@ -96,7 +97,7 @@ Cooks the project's content. Requires the mod config (`cvmod.toml`) in the proje
 If you included C++ code in your project, to make the `build` command work properly, you need to build the Visual Studio project first. Unreal automatically does that if you open the project.
 |Option|Usage|Description|
 |-|-|-|
-|config|`-c <ModConfig>`<br>`--config <ModConfig>`|Specify the mod configuration file to use.<br>[default: cvmod.toml]|
+|config|`-c <ModConfig>`<br>`--config <ModConfig>`|Specify the mod configuration file to use.<br>[default: `cvmod.toml`]|
 ---
 
 ### **Package**
@@ -106,7 +107,7 @@ Packages the project into a .pak file based on configuration found inside the mo
 Make sure to update the mod config's `includes` field with the content folders to include in the pak.
 |Option|Usage|Description|
 |-|-|-|
-|config|`-c <ModConfig>`<br>`--config <ModConfig>`|Specify the mod configuration file to use.<br>[default: cvmod.toml]|
+|config|`-c <ModConfig>`<br>`--config <ModConfig>`|Specify the mod configuration file to use.<br>[default: `cvmod.toml`]|
 |no-copy|`--no-copy`|Don't copy the latest cooked content. Only run UnrealPak.|
 |no-compress|`--no-compress`|Don't compress the .pak file.|
 ---
@@ -118,7 +119,7 @@ Copies the .pak file to the specified mods folder (Usually it's the Code Vein ~m
 If the `pakfile` is defined the mod config won't be used, instead it will just copy that pak file into the mods folder.
 |Option|Usage|Description|
 |-|-|-|
-|config|`-c <ModConfig>`<br>`--config <ModConfig>`|Specify the mod configuration file to use.<br>[default: cvmod.toml]|
+|config|`-c <ModConfig>`<br>`--config <ModConfig>`|Specify the mod configuration file to use.<br>[default: `cvmod.toml`]|
 ---
 
 ### **Update**
