@@ -1,7 +1,9 @@
-Binaries
-DerivedDataCache
-Intermediate
-Saved
+# Unreal folders and files
+/Binaries
+/Build
+/DerivedDataCache
+/Intermediate
+/Saved
 .vscode
 .vs
 *.VC.db
@@ -14,4 +16,6 @@ Saved
 *.xcworkspace
 *.log
 *_BuiltData.uasset
+
+# Mod intermediate folders
 /Package
