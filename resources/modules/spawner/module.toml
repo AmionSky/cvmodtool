@@ -1,3 +1,3 @@
 name = 'spawner'
-pakinclude = ['ModResources\Basic']
+pakinclude = ['ModResources']
 credits = ['SkacikPL']

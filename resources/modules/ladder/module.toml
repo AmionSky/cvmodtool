@@ -1,4 +1,4 @@
 name = 'ladder'
 dependencies = ['extensions']
-pakinclude = ['ModResources\BP_ModLadder']
+pakinclude = ['ModResources']
 credits = ['Amion']

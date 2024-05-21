@@ -1,4 +1,4 @@
 name = 'interactive'
 dependencies = ['extensions']
-pakinclude = ['ModResources\Basic']
+pakinclude = ['ModResources']
 credits = ['SkacikPL']
