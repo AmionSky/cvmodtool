@@ -49,7 +49,7 @@ pub struct Module {
 
 impl Module {
     /// Load from disk
-    pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
+    pub fn load(mut path: PathBuf) -> Result<Self> {
         let content = match std::fs::read_to_string(&path) {
             Ok(ret) => ret,
             Err(err) => return Err(anyhow!("Failed to read module: {err}")),
@@ -59,11 +59,10 @@ impl Module {
             Err(err) => return Err(anyhow!("Failed to parse module: {err}")),
         };
 
-        module.path = path
-            .as_ref()
-            .parent()
-            .ok_or_else(|| anyhow!("Failed to get module directory!"))?
-            .to_owned();
+        if !path.pop() {
+            return Err(anyhow!("Failed to get module directory!"));
+        }
+        module.path = path;
 
         Ok(module)
     }
