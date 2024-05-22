@@ -209,7 +209,7 @@ fn create_modconfig<P: AsRef<Path>>(
 fn create_bat<P: AsRef<Path>>(project_dir: P, cfg: &str) -> Result<()> {
     const BAT_NAME: &str = "build-and-install.bat";
     let bat_target_path = project_dir.as_ref().join(BAT_NAME);
-    let bat_ref_path = crate::resources::dir()?.join(BAT_NAME);
+    let bat_ref_path = crate::resources::dir().join(BAT_NAME);
 
     let mut bat_contents = std::fs::read_to_string(bat_ref_path)?;
     bat_contents = bat_contents.replace("{tool}", &crate::EXE.to_string_lossy());

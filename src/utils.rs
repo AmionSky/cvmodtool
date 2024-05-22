@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use once_cell::sync::Lazy;
+use std::path::PathBuf;
 
 pub static EXE: Lazy<PathBuf> =
     Lazy::new(|| std::env::current_exe().expect("Failed to get self executable path!"));

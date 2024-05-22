@@ -7,7 +7,7 @@ const REL_PATH: &str = "profiles.toml";
 pub type Profiles = HashMap<String, Vec<String>>;
 
 pub fn load() -> Result<Profiles> {
-    let content = match std::fs::read_to_string(file()?) {
+    let content = match std::fs::read_to_string(file()) {
         Ok(ret) => ret,
         Err(err) => return Err(anyhow!("Failed to read profiles: {err}")),
     };
@@ -19,8 +19,8 @@ pub fn load() -> Result<Profiles> {
     Ok(profiles)
 }
 
-fn file() -> Result<PathBuf, std::io::Error> {
-    let mut path = super::dir()?;
+fn file() -> PathBuf {
+    let mut path = super::dir();
     path.push(REL_PATH);
-    Ok(path)
+    path
 }

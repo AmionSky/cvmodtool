@@ -9,7 +9,7 @@ const REL_PATH: &str = "modules";
 const CONFIG_FILE: &str = "module.toml";
 
 pub fn load() -> Result<Vec<Module>, std::io::Error> {
-    let module_dirs = std::fs::read_dir(dir()?)?;
+    let module_dirs = std::fs::read_dir(dir())?;
     let mut modules = vec![];
 
     for entry in module_dirs.flatten() {
@@ -213,10 +213,10 @@ fn modifyfile<P: AsRef<Path>>(file: P, replace: &str) -> Result<String, std::io:
     Ok(rcontent)
 }
 
-fn dir() -> Result<PathBuf, std::io::Error> {
-    let mut path = super::dir()?;
+fn dir() -> PathBuf {
+    let mut path = super::dir();
     path.push(REL_PATH);
-    Ok(path)
+    path
 }
 
 #[cfg(test)]
@@ -225,7 +225,7 @@ mod tests {
 
     #[test]
     fn test_modules_load() {
-        let module_count = std::fs::read_dir(dir().unwrap())
+        let module_count = std::fs::read_dir(dir())
             .unwrap()
             .filter(|e| e.as_ref().unwrap().path().is_dir())
             .count();

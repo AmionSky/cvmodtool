@@ -4,6 +4,8 @@ mod colored;
 mod commands;
 mod config;
 mod resources;
+#[cfg(feature = "updater")]
+mod updater;
 mod utils;
 
 use self::commands::{Opts, SubCommand};
@@ -28,8 +30,19 @@ fn main() {
         }
     }
 
+    // Clean-up old executable
     #[cfg(feature = "updater")]
-    if resources::dir().is_err() || !resources::dir().unwrap().is_dir() {
+    {
+        let old_exe = EXE.with_extension("old");
+        if old_exe.is_file() {
+            if let Err(error) = std::fs::remove_file(old_exe) {
+                warning!("Failed to clean-up old executable! ({error})");
+            }
+        }
+    }
+
+    #[cfg(feature = "updater")]
+    if !resources::dir().is_dir() {
         important!("Downloading resources:");
         let cmd = commands::update::Update::setup();
         if let Err(err) = cmd.execute() {

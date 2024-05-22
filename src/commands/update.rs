@@ -1,10 +1,8 @@
-use crate::resources::update as resupdate;
+use crate::updater::Updater;
 use anyhow::{anyhow, Result};
 use clap::Parser;
-use std::path::Path;
-use updater::procedures::selfexe;
-use updater::provider::{GitHubProvider, Provider};
-use updater::Version;
+use semver::Version;
+use std::path::{Path, PathBuf};
 
 pub const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 const VERSION_FILE: &str = "version";
@@ -31,8 +29,6 @@ impl Update {
 
     /// Execute command
     pub fn execute(&self) -> Result<()> {
-        important!("Running updater...");
-
         let mut executable = self.executable;
         let mut resources = self.resources;
 
@@ -54,45 +50,79 @@ impl Update {
 }
 
 fn update_executable() -> Result<()> {
-    let data = selfexe::UpdateData::new(
-        provider(),
-        Version::parse(PKG_VERSION)?,
-        "cvmodtool.exe".to_string(),
-    );
-    let mut procedure = selfexe::create(data);
-    if let Err(error) = procedure.execute() {
-        return Err(anyhow!("Failed to update self! ({error})"));
+    important!("Checking for executable updates");
+
+    let updater = match Updater::new("AmionSky/cvmodtool") {
+        Ok(updater) => updater,
+        Err(error) => return Err(anyhow!("Failed to check for updates! ({error})")),
+    };
+
+    let current = Version::parse(PKG_VERSION)?;
+    let latest = updater.version()?;
+
+    if latest <= current {
+        info!("Executable is up-to-date!");
+        return Ok(());
     }
 
-    info!("Successfully updated the executable!");
+    info!("Found new version v{latest} (currently on v{current})");
+
+    let asset_path = match updater.download("cvmodtool.exe") {
+        Ok(path) => path,
+        Err(error) => return Err(anyhow!("Failed to download update! ({error})")),
+    };
+
+    if let Err(error) = replace_exe(&asset_path) {
+        return Err(anyhow!("Failed to replace executable! ({error})"));
+    }
+
+    info!("Executable has been updated successfully!");
     Ok(())
 }
 
 fn update_resources() -> Result<()> {
-    let resources_dir = crate::resources::dir()?;
+    important!("Checking for resources updates");
+
+    let updater = match Updater::new("AmionSky/cvmodtool") {
+        Ok(updater) => updater,
+        Err(error) => return Err(anyhow!("Failed to check for updates! ({error})")),
+    };
+
+    let resources_dir = crate::resources::dir();
     let version_file = resources_dir.join(VERSION_FILE);
 
-    let version = read_file(&version_file)?;
-    let data = resupdate::UpdateData::new(
-        provider(),
-        "resources.zip".to_string(),
-        version,
-        resources_dir,
-    );
-    let mut procedure = resupdate::create(data);
-    if let Err(error) = procedure.execute() {
-        return Err(anyhow!("Failed to update resources! ({error})"));
+    let current = read_version(&version_file)?;
+    let latest = updater.version()?;
+
+    if latest <= current {
+        info!("Resources are up-to-date!");
+        return Ok(());
     }
 
-    if procedure.data().success {
-        std::fs::write(version_file, procedure.data().version.to_string())?;
-        info!("Successfully updated the resources!");
+    info!("Found new version v{latest} (currently on v{current})");
+
+    let asset_path = match updater.download("resources.zip") {
+        Ok(path) => path,
+        Err(error) => return Err(anyhow!("Failed to download update! ({error})")),
+    };
+
+    if let Err(error) = replace_resources(&resources_dir, &asset_path) {
+        return Err(anyhow!("Failed to replace resources! ({error})"));
     }
 
+    if let Err(error) = std::fs::remove_file(&asset_path) {
+        warning!("Failed to delete resources.zip.dltmp! ({error})");
+    }
+
+    if let Err(error) = std::fs::write(version_file, latest.to_string()) {
+        return Err(anyhow!("Failed to write version file! ({error})"));
+    }
+
+    info!("Resources have been updated successfully!");
     Ok(())
 }
 
-fn read_file<P: AsRef<Path>>(version_file: P) -> Result<Version> {
+fn read_version<P: AsRef<Path>>(version_file: P) -> Result<Version> {
     if version_file.as_ref().exists() {
         let text = std::fs::read_to_string(version_file)?;
         Ok(Version::parse(&text)?)
@@ -101,6 +131,61 @@ fn read_file<P: AsRef<Path>>(version_file: P) -> Result<Version> {
     }
 }
 
-fn provider() -> Box<dyn Provider> {
-    Box::new(GitHubProvider::new("AmionSky/cvmodtool"))
+fn replace_exe(new: &PathBuf) -> Result<()> {
+    let current = &*crate::EXE;
+    let old = current.with_extension("old");
+
+    std::fs::rename(current, old)?;
+    std::fs::rename(new, current)?;
+
+    Ok(())
+}
+
+fn replace_resources(dir: &Path, asset: &Path) -> Result<()> {
+    info!("Unpacking resources");
+
+    // Clean resources directory
+    if dir.is_dir() {
+        std::fs::remove_dir_all(dir)?;
+    }
+    std::fs::create_dir(dir)?;
+
+    extract(asset, dir)?;
+    Ok(())
+}
+
+fn extract(asset: &Path, target: &Path) -> Result<()> {
+    let file = std::fs::File::open(asset)?;
+    let mut archive = zip::ZipArchive::new(file)?;
+
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)?;
+        let outpath = match file.enclosed_name() {
+            Some(path) => target.join(path),
+            None => continue,
+        };
+
+        if file.is_dir() {
+            std::fs::create_dir_all(&outpath)?;
+        } else {
+            if let Some(p) = outpath.parent() {
+                if !p.exists() {
+                    std::fs::create_dir_all(p)?;
+                }
+            }
+            let mut outfile = std::fs::File::create(&outpath)?;
+            std::io::copy(&mut file, &mut outfile)?;
+        }
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+
+            if let Some(mode) = file.unix_mode() {
+                fs::set_permissions(&outpath, fs::Permissions::from_mode(mode))?;
+            }
+        }
+    }
+
+    Ok(())
 }
