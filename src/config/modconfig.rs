@@ -64,8 +64,7 @@ impl ModConfig {
 
     /// Load from disk
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self, ModConfigError> {
-        let wd = crate::working_dir().map_err(ModConfigError::WD)?;
-        let mut path = wd.join(path.as_ref());
+        let mut path = crate::WORKDIR.join(path.as_ref());
 
         if !path.is_file() {
             return Err(ModConfigError::NotFound(path.display().to_string()));
@@ -147,6 +146,4 @@ pub enum ModConfigError {
     Serialize(#[from] toml::ser::Error),
     #[error("Failed to save mod config. ({0})")]
     Write(#[source] std::io::Error),
-    #[error("Failed to get the current working directory. ({0})")]
-    WD(#[source] std::io::Error),
 }

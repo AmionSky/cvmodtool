@@ -24,23 +24,19 @@ impl ToolConfig {
 
     /// Checks if the config file exists
     pub fn check() -> bool {
-        if let Ok(file) = config_path() {
-            file.is_file()
-        } else {
-            false
-        }
+        config_path().is_file()
     }
 
     /// Saves the config to file
     pub fn save(&self) -> Result<(), ToolConfigError> {
         let content = toml::to_string_pretty(self)?;
-        let path = config_path()?;
+        let path = config_path();
         std::fs::write(path, content).map_err(ToolConfigError::Write)
     }
 
     /// Loads the config from file
     pub fn load() -> Result<Self, ToolConfigError> {
-        let path = config_path()?;
+        let path = config_path();
         let content = std::fs::read_to_string(path).map_err(ToolConfigError::Read)?;
         toml::from_str(&content).map_err(ToolConfigError::Parse)
     }
@@ -62,10 +58,8 @@ impl ToolConfig {
     }
 }
 
-fn config_path() -> Result<PathBuf, ToolConfigError> {
-    let mut path = crate::executable_dir().map_err(ToolConfigError::Path)?;
-    path.push(FILE_NAME);
-    Ok(path)
+fn config_path() -> PathBuf {
+    crate::EXEDIR.join(FILE_NAME)
 }
 
 #[derive(Debug, Error)]
@@ -78,6 +72,4 @@ pub enum ToolConfigError {
     Serialize(#[from] toml::ser::Error),
     #[error("Failed to save tool config. ({0})")]
     Write(#[source] std::io::Error),
-    #[error("Failed to find the tool config directory. ({0})")]
-    Path(#[source] std::io::Error),
 }

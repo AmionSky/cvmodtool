@@ -36,13 +36,13 @@ impl Create {
     /// Execute command
     pub fn execute(&self) -> Result<()> {
         important!("Creating mod project...");
-        let working_dir = crate::working_dir()?;
+        let working_dir = &*crate::WORKDIR;
 
         if !name_check(self.name()) {
             return Err(anyhow!("Project name has incorrect format"));
         }
 
-        if check_project_dir(&working_dir, self.name()) {
+        if check_project_dir(working_dir, self.name()) {
             return Err(anyhow!(
                 "A project with the name \"{}\" already exist in the current directory!",
                 self.name()
@@ -57,7 +57,7 @@ impl Create {
             }
         };
 
-        let project_dir = match create_project_dir(&working_dir, self.name()) {
+        let project_dir = match create_project_dir(working_dir, self.name()) {
             Ok(ret) => ret,
             Err(err) => return Err(anyhow!("Failed to create project directory: {err}")),
         };
@@ -212,7 +212,7 @@ fn create_bat<P: AsRef<Path>>(project_dir: P, cfg: &str) -> Result<()> {
     let bat_ref_path = crate::resources::dir()?.join(BAT_NAME);
 
     let mut bat_contents = std::fs::read_to_string(bat_ref_path)?;
-    bat_contents = bat_contents.replace("{tool}", &std::env::current_exe()?.to_string_lossy());
+    bat_contents = bat_contents.replace("{tool}", &crate::EXE.to_string_lossy());
     bat_contents = bat_contents.replace("{config}", cfg);
 
     std::fs::write(bat_target_path, bat_contents)?;

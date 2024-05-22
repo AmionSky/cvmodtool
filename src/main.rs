@@ -6,10 +6,11 @@ mod config;
 mod resources;
 mod utils;
 
+use self::commands::{Opts, SubCommand};
+use self::config::ToolConfig;
+use self::utils::{EXE, EXEDIR, WORKDIR};
 use anyhow::{anyhow, Error, Result};
 use clap::Parser;
-use commands::{Opts, SubCommand};
-use config::ToolConfig;
 use std::path::PathBuf;
 
 fn main() {
@@ -69,22 +70,6 @@ fn main() {
 fn error_exit(code: i32, msg: &str, err: Error) {
     error!("{}: {}", msg, err);
     std::process::exit(code);
-}
-
-pub fn executable_dir() -> std::io::Result<PathBuf> {
-    #[cfg(debug_assertions)]
-    return Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR")));
-
-    #[cfg(not(debug_assertions))]
-    {
-        let mut path = std::env::current_exe()?;
-        path.pop();
-        Ok(path)
-    }
-}
-
-pub fn working_dir() -> std::io::Result<PathBuf> {
-    std::env::current_dir()
 }
 
 fn create_tool_config() -> Result<()> {
