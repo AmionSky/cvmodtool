@@ -10,6 +10,7 @@ full = [
     'workmapdoor',
     'ladder',
     'killvolume',
+    'mistwall',
 ]
 default = [
     'base',
@@ -22,7 +23,8 @@ default = [
     'workmapdoor',
     'ladder',
     'killvolume',
+    'mistwall',
 ]
 min = ['base']
 empty = []
-nocompile = ['base', 'enemies', 'spawner', 'startmap', 'killvolume']
+nocompile = ['base', 'enemies', 'spawner', 'startmap', 'killvolume', 'mistwall']
