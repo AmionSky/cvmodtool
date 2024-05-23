@@ -1,0 +1,3 @@
+name = 'mistwall'
+pakinclude = ['ModResources']
+credits = ['Amion']
