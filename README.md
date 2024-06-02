@@ -31,15 +31,9 @@ Mod configuration file. Automatically created by the `create` command. Make sure
 ```toml
 project = 'TestProject' # Name of the Unreal project
 pakname = 'TestProject_P' # Name of the .pak file to create (The '_P' is important)
+includes = ['Maps', 'ModResources'] # Folders/files to include in the final package
 packagedir = 'Package' # (Optional) Directory to create the package in (default: Package)
 credits = ['Amion'] # (Optional) Credits of the included modules (unused)
-
-# Folders/files to include in the final package
-[includes]
-# Assets in the "Content" folder which 'cooked' variant should be included
-cook = ['Maps', 'ModResources']
-# Pre-cooked assets in the "ContentPreCooked" folder that should be included as-is
-copy = []
 ```
 
 ## Profiles
