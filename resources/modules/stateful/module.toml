@@ -1,4 +1,4 @@
 name = 'stateful'
-dependencies = ['interactive']
+dependencies = ['enemies', 'interactive']
 pakinclude = ['ModResources\Stateful']
 credits = ['Amion']
