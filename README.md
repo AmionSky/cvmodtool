@@ -33,7 +33,6 @@ project = 'TestProject' # Name of the Unreal project
 pakname = 'TestProject_P' # Name of the .pak file to create (The '_P' is important)
 includes = ['Maps', 'ModResources'] # Folders/files to include in the final package
 packagedir = 'Package' # (Optional) Directory to create the package in (default: Package)
-credits = ['Amion'] # (Optional) Credits of the included modules (unused)
 ```
 
 ## Profiles
@@ -56,10 +55,12 @@ Modules are packages of project content that you can include on `create`. The mo
 |`spawner`|Contains the ActorProxySpawner.|
 |`interactive`|Contains the Interactive Object Base.|
 |`enemies`|Dummy actors of all the enemies in the game.|
-|`startmap`|Starting `work` map with navmesh and removed reflection capture|
+|`startmap`|Starting `work` map with navmesh and removed reflection capture.|
 |`workmapdoor`|Spawns an actor in the base that you can access to enter the `work` map.|
 |`stateful`|Contains "stateful" mistle and enemy spawner that you can use to emulate the main gamemode. Works even with unloading sub levels _(not tested recently)_. Requires the `LevelState` and `LevelOrigin` actors in the persistent level. Run the level in the editor to see any error messages caused by incorrect setup.|
 |`ladder`|Ladder with height adjustment. For AI companions to recognize it as ladder, create a `NavLinkProxy` with its Area Class set to `NavArea_Ladder`.|
+|`killvolume`|Kill volume based on the game's `BP_KillVolume`.|
+|`mistwall`|Mist/Boss wall with optional collision emulation.|
 
 ## Commands
 *For more information on all the commands just use the `--help` option argument.*

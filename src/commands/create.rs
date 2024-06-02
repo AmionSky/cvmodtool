@@ -190,19 +190,14 @@ fn create_modconfig<P: AsRef<Path>>(
     let mut modconfig = ModConfig::new(project_name, project_dir);
 
     // Get extra info from modules
-    let mut pakincludes = vec![];
-    let mut credits = vec![];
-    for module in modules {
-        pakincludes.append(&mut module.pakinclude().to_owned());
-        credits.append(&mut module.credits().to_owned());
-    }
+    let mut pakincludes = modules
+        .iter()
+        .flat_map(|m| m.pakinclude().to_owned())
+        .collect::<Vec<_>>();
     pakincludes.sort_unstable();
     pakincludes.dedup();
-    credits.sort_unstable();
-    credits.dedup();
 
     modconfig.set_includes(pakincludes);
-    modconfig.set_credits(credits);
     Ok(modconfig)
 }
 

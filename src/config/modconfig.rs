@@ -13,9 +13,6 @@ pub struct ModConfig {
     /// Relative path/name of the directory to do packaging in
     #[serde(skip_serializing, default = "default_packagedir")]
     packagedir: PathBuf,
-    /// Credits of the included modules
-    #[serde(default)]
-    credits: Vec<String>,
     /// Config working directory
     #[serde(skip)]
     wd: PathBuf,
@@ -57,7 +54,6 @@ impl ModConfig {
             project: name.to_string(),
             packagedir: default_packagedir(),
             includes: Includes::default(),
-            credits: vec![],
             wd: wd.as_ref().to_path_buf(),
         }
     }
@@ -121,11 +117,6 @@ impl ModConfig {
     /// Set package includes
     pub fn set_includes(&mut self, includes: Vec<PathBuf>) {
         self.includes = Includes(includes);
-    }
-
-    /// Set credits
-    pub fn set_credits(&mut self, data: Vec<String>) {
-        self.credits = data;
     }
 
     /// Mod working directory

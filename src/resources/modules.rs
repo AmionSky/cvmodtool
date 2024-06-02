@@ -43,8 +43,6 @@ pub struct Module {
     excludefiles: Vec<PathBuf>,
     #[serde(default)]
     pakinclude: Vec<PathBuf>,
-    #[serde(default)]
-    credits: Vec<String>,
 }
 
 impl Module {
@@ -95,11 +93,6 @@ impl Module {
     /// Gets the files/directories that should be included in the final .pak file
     pub fn pakinclude(&self) -> &Vec<PathBuf> {
         &self.pakinclude
-    }
-
-    /// Gets the credits of the module
-    pub fn credits(&self) -> &Vec<String> {
-        &self.credits
     }
 
     pub fn install<P: AsRef<Path>>(&self, target: P, project_name: &str) -> Result<()> {
