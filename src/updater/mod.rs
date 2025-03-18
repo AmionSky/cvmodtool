@@ -3,20 +3,23 @@ mod github;
 use crate::utils::EXEDIR;
 
 use self::github::{GitHubRelease, GitHubResponse};
-use native_tls::TlsConnector;
-use once_cell::sync::Lazy;
 use semver::Version;
 use std::fs::File;
 use std::path::PathBuf;
-use std::sync::Arc;
-use std::time::Duration;
+use std::sync::LazyLock;
 use thiserror::Error;
-use ureq::{Agent, AgentBuilder};
+use ureq::Agent;
+use ureq::tls::{TlsConfig, TlsProvider};
 
-static AGENT: Lazy<Agent> = Lazy::new(|| {
-    AgentBuilder::new()
-        .tls_connector(Arc::new(TlsConnector::new().unwrap()))
+static AGENT: LazyLock<Agent> = LazyLock::new(|| {
+    Agent::config_builder()
+        .tls_config(
+            TlsConfig::builder()
+                .provider(TlsProvider::NativeTls)
+                .build(),
+        )
         .build()
+        .into()
 });
 
 pub struct Updater {
@@ -29,11 +32,11 @@ impl Updater {
 
         let response: GitHubResponse = AGENT
             .get(&url)
-            .set("Accept", "application/vnd.github.v3+json")
-            .timeout(Duration::from_secs(10))
+            .header("Accept", "application/vnd.github.v3+json")
             .call()
-            .map_err(|e| UpdaterError::NoResponse(Box::new(e)))?
-            .into_json()
+            .map_err(UpdaterError::NoResponse)?
+            .into_body()
+            .read_json()
             .map_err(UpdaterError::InvalidResponse)?;
 
         match response {
@@ -60,7 +63,8 @@ impl Updater {
         let mut reader = AGENT
             .get(asset.url())
             .call()
-            .map_err(|e| UpdaterError::NoResponse(Box::new(e)))?
+            .map_err(UpdaterError::NoResponse)?
+            .into_body()
             .into_reader();
 
         let path = EXEDIR.join(format!("{}.dltmp", asset.name()));
@@ -75,9 +79,9 @@ impl Updater {
 #[derive(Debug, Error)]
 pub enum UpdaterError {
     #[error("Failed to get a response from GitHub: {0}")]
-    NoResponse(#[source] Box<ureq::Error>),
+    NoResponse(#[source] ureq::Error),
     #[error("Received invalid data: {0}")]
-    InvalidResponse(#[source] std::io::Error),
+    InvalidResponse(#[source] ureq::Error),
     #[error("GitHub API error: {0}")]
     ApiError(String),
     #[error("Failed to parse version string: {0}")]

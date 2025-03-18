@@ -1,5 +1,5 @@
 use crate::config::{ModConfig, ModConfigError, ToolConfig, ToolConfigError};
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use clap::Parser;
 use std::path::{Path, PathBuf, StripPrefixError};
 use std::process::{Command, Stdio};

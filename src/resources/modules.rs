@@ -1,5 +1,5 @@
 use crate::resources::REPLACE;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use serde::Deserialize;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};

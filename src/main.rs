@@ -11,7 +11,7 @@ mod utils;
 use self::commands::{Opts, SubCommand};
 use self::config::ToolConfig;
 use self::utils::{EXE, EXEDIR, WORKDIR};
-use anyhow::{anyhow, Error, Result};
+use anyhow::{Error, Result, anyhow};
 use clap::Parser;
 use std::path::PathBuf;
 

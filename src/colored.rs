@@ -1,6 +1,6 @@
-use once_cell::sync::OnceCell;
+use std::sync::OnceLock;
 
-pub static USE_VERBOSE: OnceCell<bool> = OnceCell::new();
+pub static USE_VERBOSE: OnceLock<bool> = OnceLock::new();
 
 macro_rules! styled {
     ($stream:expr, $style:expr, $($arg:tt)*) => {{

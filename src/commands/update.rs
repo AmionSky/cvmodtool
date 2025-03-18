@@ -1,5 +1,5 @@
 use crate::updater::Updater;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use clap::Parser;
 use semver::Version;
 use std::path::{Path, PathBuf};
