@@ -168,22 +168,13 @@ fn extract(asset: &Path, target: &Path) -> Result<()> {
         if file.is_dir() {
             std::fs::create_dir_all(&outpath)?;
         } else {
-            if let Some(p) = outpath.parent() {
-                if !p.exists() {
-                    std::fs::create_dir_all(p)?;
-                }
+            if let Some(p) = outpath.parent()
+                && !p.exists()
+            {
+                std::fs::create_dir_all(p)?;
             }
             let mut outfile = std::fs::File::create(&outpath)?;
             std::io::copy(&mut file, &mut outfile)?;
-        }
-
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-
-            if let Some(mode) = file.unix_mode() {
-                fs::set_permissions(&outpath, fs::Permissions::from_mode(mode))?;
-            }
         }
     }
 

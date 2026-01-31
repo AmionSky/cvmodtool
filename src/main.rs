@@ -34,10 +34,10 @@ fn main() {
     #[cfg(feature = "updater")]
     {
         let old_exe = EXE.with_extension("old");
-        if old_exe.is_file() {
-            if let Err(error) = std::fs::remove_file(old_exe) {
-                warning!("Failed to clean-up old executable! ({error})");
-            }
+        if old_exe.is_file()
+            && let Err(error) = std::fs::remove_file(old_exe)
+        {
+            warning!("Failed to clean-up old executable! ({error})");
         }
     }
 
